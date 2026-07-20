@@ -10,12 +10,18 @@ Roda 100% local — nenhum segredo sai da sua máquina.
 
 ## Status
 
-MVP funcional em desenvolvimento. Ainda não publicado no PyPI.
+Versão `0.1.0` preparada. Ainda não publicada no PyPI.
 
 ## Instalação para desenvolvimento
 
 ```bash
 pipx install -e /home/usuario/leak-hunt
+```
+
+Depois da publicação no PyPI, a instalação será:
+
+```bash
+pipx install leak-hunt
 ```
 
 ## Uso atual

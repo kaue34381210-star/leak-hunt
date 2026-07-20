@@ -11,7 +11,7 @@ def test_exibe_versao(capsys: pytest.CaptureFixture[str]) -> None:
         main(["--version"])
 
     assert erro.value.code == 0
-    assert capsys.readouterr().out == "leak-hunt 0.0.1\n"
+    assert capsys.readouterr().out == "leak-hunt 0.1.0\n"
 
 
 def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
