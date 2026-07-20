@@ -1,5 +1,7 @@
 # leak-hunt
 
+[![CI](https://github.com/kaue34381210-star/leak-hunt/actions/workflows/ci.yml/badge.svg)](https://github.com/kaue34381210-star/leak-hunt/actions/workflows/ci.yml)
+
 Scanner de segredos em histórico Git, com regras focadas no contexto brasileiro.
 O MVP combina formatos genéricos selecionados com chaves PIX e validação por
 dígito verificador de CPF/CNPJ.
