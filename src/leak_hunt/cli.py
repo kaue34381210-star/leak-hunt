@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 from leak_hunt.regras import detectar
+from leak_hunt.relatorio import Achado, criar_achado, formatar_texto
 from leak_hunt.varredura import (
     ErroRepositorio,
     ErroVarredura,
@@ -52,24 +53,16 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         total_linhas = 0
-        total_segredos = 0
+        achados: list[Achado] = []
         for linha in iterar_linhas_adicionadas(repositorio):
             total_linhas += 1
-            total_segredos += sum(1 for _ in detectar(linha.conteudo))
+            achados.extend(
+                criar_achado(linha, deteccao)
+                for deteccao in detectar(linha.conteudo)
+            )
     except ErroVarredura as erro:
         print(f"erro: {erro}", file=sys.stderr)
         return 2
 
-    descricao = (
-        "linha adicionada analisada"
-        if total_linhas == 1
-        else "linhas adicionadas analisadas"
-    )
-    descricao_segredos = (
-        "possível segredo" if total_segredos == 1 else "possíveis segredos"
-    )
-    print(
-        f"Varredura concluída: {total_linhas} {descricao}; "
-        f"{total_segredos} {descricao_segredos}."
-    )
-    return 0
+    print(formatar_texto(achados, total_linhas))
+    return 1 if achados else 0

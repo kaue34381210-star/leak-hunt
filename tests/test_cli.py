@@ -31,8 +31,8 @@ def test_recebe_caminho_do_repositorio(
     assert main([str(tmp_path)]) == 0
 
     assert capsys.readouterr().out == (
-        "Varredura concluída: 0 linhas adicionadas analisadas; "
-        "0 possíveis segredos.\n"
+        "Nenhum segredo encontrado.\n"
+        "Linhas adicionadas analisadas: 0\n"
     )
 
 
@@ -45,3 +45,46 @@ def test_rejeita_diretorio_sem_repositorio(
     captura = capsys.readouterr()
     assert captura.out == ""
     assert "não é um repositório Git" in captura.err
+
+
+def test_retorna_um_e_ofusca_quando_encontra_segredo(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    segredo = "AKIA" + "FAKE" + "0" * 12
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.name", "Teste"],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(tmp_path),
+            "config",
+            "user.email",
+            "teste@example.invalid",
+        ],
+        check=True,
+    )
+    (tmp_path / "config.py").write_text(
+        f'CHAVE = "{segredo}"\n',
+        encoding="utf-8",
+    )
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", "config.py"],
+        check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-q", "-m", "teste"],
+        check=True,
+    )
+
+    assert main([str(tmp_path)]) == 1
+
+    saida = capsys.readouterr().out
+    assert "AWS Access Key" in saida
+    assert "config.py:1" in saida
+    assert segredo not in saida
+    assert "AKIA…0000" in saida
