@@ -1,3 +1,5 @@
+import subprocess
+
 import pytest
 
 from leak_hunt.cli import main
@@ -21,8 +23,22 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_recebe_caminho_do_repositorio(
+    tmp_path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    assert main(["projeto"]) == 0
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
 
-    assert capsys.readouterr().out == "Repositório selecionado: projeto\n"
+    assert main([str(tmp_path)]) == 0
+
+    assert capsys.readouterr().out == f"Repositório Git válido: {tmp_path}\n"
+
+
+def test_rejeita_diretorio_sem_repositorio(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main([str(tmp_path)]) == 2
+
+    captura = capsys.readouterr()
+    assert captura.out == ""
+    assert "não é um repositório Git" in captura.err

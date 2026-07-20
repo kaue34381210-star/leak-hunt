@@ -3,7 +3,9 @@
 import argparse
 from collections.abc import Sequence
 from pathlib import Path
+import sys
 
+from leak_hunt.varredura import ErroRepositorio, validar_repositorio
 from leak_hunt.versao import __version__
 
 
@@ -36,5 +38,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_help()
         return 0
 
-    print(f"Repositório selecionado: {argumentos.caminho}")
+    try:
+        repositorio = validar_repositorio(argumentos.caminho)
+    except ErroRepositorio as erro:
+        print(f"erro: {erro}", file=sys.stderr)
+        return 2
+
+    print(f"Repositório Git válido: {repositorio}")
     return 0
