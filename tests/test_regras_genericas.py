@@ -1,6 +1,6 @@
 import pytest
 
-from leak_hunt.regras import detectar
+from leak_hunt.regras import ErroSelecaoRegras, detectar, selecionar_regras
 
 
 @pytest.mark.parametrize(
@@ -29,3 +29,17 @@ def test_detecta_segredos_genericos(texto: str, codigo: str) -> None:
 )
 def test_ignora_texto_sem_segredo_generico(texto: str) -> None:
     assert list(detectar(texto)) == []
+
+
+def test_seleciona_e_ignora_regras_por_codigo() -> None:
+    assert [regra.codigo for regra in selecionar_regras(somente=("jwt",))] == [
+        "jwt"
+    ]
+    assert "jwt" not in {
+        regra.codigo for regra in selecionar_regras(ignorar=("jwt",))
+    }
+
+
+def test_rejeita_codigo_de_regra_inexistente() -> None:
+    with pytest.raises(ErroSelecaoRegras, match="inexistente"):
+        selecionar_regras(somente=("inexistente",))

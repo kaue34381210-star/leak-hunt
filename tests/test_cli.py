@@ -23,6 +23,8 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
     assert "--since" in saida
     assert "--format" in saida
     assert "--exclude" in saida
+    assert "--only" in saida
+    assert "--skip" in saida
     assert "CAMINHO" in saida
 
 
@@ -34,6 +36,14 @@ def test_rejeita_data_since_fora_do_formato_iso(
 
     assert erro.value.code == 2
     assert "AAAA-MM-DD" in capsys.readouterr().err
+
+
+def test_rejeita_codigo_de_regra_desconhecido(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main(["--only", "inexistente", "."]) == 2
+
+    assert "código de regra desconhecido" in capsys.readouterr().err
 
 
 def test_recebe_caminho_do_repositorio(

@@ -25,6 +25,7 @@ leak-hunt /caminho/do/repo
 leak-hunt --since 2024-01-01 /caminho/do/repo
 leak-hunt --format json /caminho/do/repo > relatorio.json
 leak-hunt --exclude 'tests/**' --exclude '**/fixtures/**' /caminho/do/repo
+leak-hunt --only pix-email --skip cpf-hardcoded /caminho/do/repo
 ```
 
 O relatório nunca mostra o valor completo encontrado. O formato JSON usa a
@@ -35,6 +36,9 @@ a mais recente, a quantidade de ocorrências e os arquivos afetados.
 Exclusões também podem ser declaradas, uma por linha, em `.leakhuntignore` na
 raiz analisada. Os padrões são globs, são aplicados em ordem e aceitam `!` para
 reincluir um caminho. Nada é ignorado por padrão.
+
+`--only CODE` e `--skip CODE` podem ser repetidos para ativar ou silenciar
+regras específicas. Quando usados juntos, `--skip` prevalece.
 
 ## Códigos de saída
 
