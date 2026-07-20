@@ -6,6 +6,7 @@ import pytest
 
 from leak_hunt.varredura import (
     ErroRepositorio,
+    _caminho_do_diff,
     iterar_linhas_adicionadas,
     validar_repositorio,
 )
@@ -149,3 +150,9 @@ def test_limita_varredura_ao_head_ou_branches(tmp_path) -> None:
 
     assert "somente lateral" not in [linha.conteudo for linha in linhas_head]
     assert "somente lateral" in [linha.conteudo for linha in linhas_branches]
+
+
+def test_decodifica_aspas_e_escapes_em_caminho_do_diff() -> None:
+    caminho_git = '"b/pasta/arquivo \\"especial\\".txt"'
+
+    assert _caminho_do_diff(caminho_git) == 'pasta/arquivo "especial".txt'

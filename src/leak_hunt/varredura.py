@@ -1,5 +1,6 @@
 """Acesso local aos repositórios Git analisados pelo leak-hunt."""
 
+import ast
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -70,7 +71,12 @@ def _caminho_do_diff(valor: str) -> str | None:
     if valor == "/dev/null":
         return None
     if valor.startswith('"') and valor.endswith('"'):
-        valor = valor[1:-1]
+        try:
+            decodificado = ast.literal_eval(valor)
+        except (SyntaxError, ValueError):
+            decodificado = valor[1:-1]
+        if isinstance(decodificado, str):
+            valor = decodificado
     if valor.startswith("b/"):
         valor = valor[2:]
     return valor
