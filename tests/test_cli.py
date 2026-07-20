@@ -17,3 +17,12 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
     saida = capsys.readouterr().out
     assert "usage: leak-hunt" in saida
     assert "--version" in saida
+    assert "CAMINHO" in saida
+
+
+def test_recebe_caminho_do_repositorio(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main(["projeto"]) == 0
+
+    assert capsys.readouterr().out == "Repositório selecionado: projeto\n"
