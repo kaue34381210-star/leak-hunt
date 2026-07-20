@@ -31,7 +31,8 @@ def test_recebe_caminho_do_repositorio(
     assert main([str(tmp_path)]) == 0
 
     assert capsys.readouterr().out == (
-        "Varredura concluída: 0 linhas adicionadas analisadas.\n"
+        "Varredura concluída: 0 linhas adicionadas analisadas; "
+        "0 possíveis segredos.\n"
     )
 
 
