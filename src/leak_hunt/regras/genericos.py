@@ -27,4 +27,12 @@ REGRAS_GENERICAS = (
             r"[A-Za-z0-9_-]{10,}(?![A-Za-z0-9_-])"
         ),
     ),
+    Regra(
+        codigo="github-pat",
+        tipo="Token de acesso GitHub",
+        padrao=re.compile(
+            r"(?<![A-Za-z0-9_])gh[pousr]_[A-Za-z0-9]{36}"
+            r"(?![A-Za-z0-9_])"
+        ),
+    ),
 )

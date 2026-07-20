@@ -53,7 +53,7 @@ locais.
 
 ## Regras do MVP
 
-- AWS Access Key, cabeçalhos de chave privada e JWT.
+- AWS Access Key, cabeçalhos de chave privada, JWT e tokens de acesso GitHub.
 - Chaves PIX por e-mail, EVP, CPF e CNPJ em contexto PIX.
 - CPF e CNPJ hardcoded, com dígitos válidos e no mínimo cinco ocorrências no
   mesmo arquivo.

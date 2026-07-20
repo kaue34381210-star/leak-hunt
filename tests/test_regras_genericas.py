@@ -55,3 +55,16 @@ def test_nao_detecta_jwt_embutido_em_base64url_maior() -> None:
     token = "eyJ" + "a" * 12 + ".eyJ" + "b" * 12 + "." + "c" * 12
 
     assert list(detectar(f"prefixo_{token}_sufixo")) == []
+
+
+@pytest.mark.parametrize("prefixo", ["ghp_", "gho_", "ghu_", "ghs_", "ghr_"])
+def test_detecta_tokens_de_acesso_github(prefixo: str) -> None:
+    token = prefixo + "A" * 36
+
+    assert [item.codigo for item in detectar(f'token = "{token}"')] == [
+        "github-pat"
+    ]
+
+
+def test_ignora_token_github_curto() -> None:
+    assert list(detectar("token = " + "ghp_" + "A" * 12)) == []
