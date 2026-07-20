@@ -1,5 +1,6 @@
 """Modelos e formatação dos resultados da varredura."""
 
+from collections import Counter
 from dataclasses import dataclass
 
 from leak_hunt.regras import Deteccao
@@ -45,6 +46,17 @@ def criar_achado(linha: LinhaAdicionada, deteccao: Deteccao) -> Achado:
         trecho_ofuscado=ofuscar(deteccao.valor),
         minimo_por_arquivo=deteccao.minimo_por_arquivo,
     )
+
+
+def filtrar_por_limiar(achados: list[Achado]) -> list[Achado]:
+    """Remove alertas que não atingiram o mínimo exigido no mesmo arquivo."""
+    contagens = Counter((achado.codigo, achado.arquivo) for achado in achados)
+    return [
+        achado
+        for achado in achados
+        if contagens[(achado.codigo, achado.arquivo)]
+        >= achado.minimo_por_arquivo
+    ]
 
 
 def formatar_texto(achados: list[Achado], total_linhas: int) -> str:

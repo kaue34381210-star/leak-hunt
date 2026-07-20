@@ -6,7 +6,12 @@ from pathlib import Path
 import sys
 
 from leak_hunt.regras import detectar
-from leak_hunt.relatorio import Achado, criar_achado, formatar_texto
+from leak_hunt.relatorio import (
+    Achado,
+    criar_achado,
+    filtrar_por_limiar,
+    formatar_texto,
+)
 from leak_hunt.varredura import (
     ErroRepositorio,
     ErroVarredura,
@@ -64,5 +69,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"erro: {erro}", file=sys.stderr)
         return 2
 
+    achados = filtrar_por_limiar(achados)
     print(formatar_texto(achados, total_linhas))
     return 1 if achados else 0
