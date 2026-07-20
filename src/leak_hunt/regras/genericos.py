@@ -22,9 +22,9 @@ REGRAS_GENERICAS = (
         codigo="jwt",
         tipo="JSON Web Token (JWT)",
         padrao=re.compile(
-            r"\beyJ[A-Za-z0-9_-]{10,}\."
+            r"(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{10,}\."
             r"eyJ[A-Za-z0-9_-]{10,}\."
-            r"[A-Za-z0-9_-]{10,}\b"
+            r"[A-Za-z0-9_-]{10,}(?![A-Za-z0-9_-])"
         ),
     ),
 )

@@ -43,3 +43,15 @@ def test_seleciona_e_ignora_regras_por_codigo() -> None:
 def test_rejeita_codigo_de_regra_inexistente() -> None:
     with pytest.raises(ErroSelecaoRegras, match="inexistente"):
         selecionar_regras(somente=("inexistente",))
+
+
+def test_detecta_jwt_terminado_em_hifen() -> None:
+    token = "eyJ" + "a" * 12 + ".eyJ" + "b" * 12 + "." + "c" * 11 + "-"
+
+    assert [item.codigo for item in detectar(f'token = "{token}"')] == ["jwt"]
+
+
+def test_nao_detecta_jwt_embutido_em_base64url_maior() -> None:
+    token = "eyJ" + "a" * 12 + ".eyJ" + "b" * 12 + "." + "c" * 12
+
+    assert list(detectar(f"prefixo_{token}_sufixo")) == []
