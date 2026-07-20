@@ -30,7 +30,9 @@ def test_recebe_caminho_do_repositorio(
 
     assert main([str(tmp_path)]) == 0
 
-    assert capsys.readouterr().out == f"Repositório Git válido: {tmp_path}\n"
+    assert capsys.readouterr().out == (
+        "Varredura concluída: 0 linhas adicionadas analisadas.\n"
+    )
 
 
 def test_rejeita_diretorio_sem_repositorio(

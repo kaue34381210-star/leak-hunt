@@ -5,7 +5,12 @@ from collections.abc import Sequence
 from pathlib import Path
 import sys
 
-from leak_hunt.varredura import ErroRepositorio, validar_repositorio
+from leak_hunt.varredura import (
+    ErroRepositorio,
+    ErroVarredura,
+    iterar_linhas_adicionadas,
+    validar_repositorio,
+)
 from leak_hunt.versao import __version__
 
 
@@ -44,5 +49,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"erro: {erro}", file=sys.stderr)
         return 2
 
-    print(f"Repositório Git válido: {repositorio}")
+    try:
+        total = sum(1 for _ in iterar_linhas_adicionadas(repositorio))
+    except ErroVarredura as erro:
+        print(f"erro: {erro}", file=sys.stderr)
+        return 2
+
+    descricao = (
+        "linha adicionada analisada"
+        if total == 1
+        else "linhas adicionadas analisadas"
+    )
+    print(f"Varredura concluída: {total} {descricao}.")
     return 0
