@@ -4,6 +4,7 @@ from pathlib import Path
 from leak_hunt.regras import Deteccao
 from leak_hunt.relatorio import (
     Achado,
+    AgregadorAchados,
     criar_achado,
     filtrar_por_limiar,
     formatar_json,
@@ -65,6 +66,98 @@ def test_filtra_achados_abaixo_do_limiar_no_mesmo_arquivo() -> None:
     assert filtrar_por_limiar(abaixo_do_limiar + no_limiar) == no_limiar
 
 
+def test_deduplica_segredo_e_agrega_origens() -> None:
+    segredo = "AKIA" + "FAKE" + "0" * 12
+    deteccao = Deteccao(
+        codigo="aws-access-key",
+        tipo="AWS Access Key",
+        valor=segredo,
+        inicio=0,
+        fim=len(segredo),
+    )
+    antiga = LinhaAdicionada(
+        commit="a" * 40,
+        autor="Teste",
+        data="2025-01-01T10:00:00+00:00",
+        arquivo="a.py",
+        numero=1,
+        conteudo=segredo,
+    )
+    recente = LinhaAdicionada(
+        commit="b" * 40,
+        autor="Teste",
+        data="2026-01-01T10:00:00+00:00",
+        arquivo="b.py",
+        numero=2,
+        conteudo=segredo,
+    )
+    agregador = AgregadorAchados()
+
+    agregador.adicionar(recente, deteccao)
+    agregador.adicionar(antiga, deteccao)
+    achados = agregador.finalizar()
+
+    assert len(achados) == 1
+    assert achados[0].ocorrencias == 2
+    assert achados[0].arquivos_afetados == ("a.py", "b.py")
+    assert achados[0].primeiro_commit == "a" * 40
+    assert achados[0].commit_mais_recente == "b" * 40
+
+
+def test_nao_colide_segredos_com_mesmo_trecho_ofuscado() -> None:
+    valores = ("AKIA" + "FAKE" + "0" * 12, "AKIA" + "TEST" + "0" * 12)
+    linha = LinhaAdicionada(
+        commit="a" * 40,
+        autor="Teste",
+        data="2026-01-01T10:00:00+00:00",
+        arquivo="config.py",
+        numero=1,
+        conteudo="",
+    )
+    agregador = AgregadorAchados()
+    for valor in valores:
+        agregador.adicionar(
+            linha,
+            Deteccao(
+                codigo="aws-access-key",
+                tipo="AWS Access Key",
+                valor=valor,
+                inicio=0,
+                fim=len(valor),
+            ),
+        )
+
+    assert len(agregador.finalizar()) == 2
+
+
+def test_agregador_respeita_limiar_por_arquivo() -> None:
+    valor = "529.982." + "247-25"
+    deteccao = Deteccao(
+        codigo="cpf-hardcoded",
+        tipo="CPF hardcoded em massa",
+        valor=valor,
+        inicio=0,
+        fim=len(valor),
+        minimo_por_arquivo=5,
+    )
+    linha = LinhaAdicionada(
+        commit="a" * 40,
+        autor="Teste",
+        data="2026-01-01T10:00:00+00:00",
+        arquivo="clientes.py",
+        numero=1,
+        conteudo=valor,
+    )
+    agregador = AgregadorAchados()
+
+    for _ in range(4):
+        agregador.adicionar(linha, deteccao)
+    assert agregador.finalizar() == []
+
+    agregador.adicionar(linha, deteccao)
+    assert agregador.finalizar()[0].ocorrencias == 5
+
+
 def test_formata_json_sem_expor_segredo() -> None:
     segredo = "AKIA" + "FAKE" + "0" * 12
     achado = Achado(
@@ -85,6 +178,7 @@ def test_formata_json_sem_expor_segredo() -> None:
     assert documento["resumo"] == {
         "linhas_adicionadas_analisadas": 12,
         "total_achados": 1,
+        "total_ocorrencias": 1,
     }
     assert documento["achados"][0]["arquivo"] == "config.py"
     assert documento["achados"][0]["trecho_ofuscado"] == "AKIA…0000"

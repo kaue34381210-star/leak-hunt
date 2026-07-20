@@ -9,9 +9,7 @@ import sys
 from leak_hunt.exclusoes import carregar_exclusoes
 from leak_hunt.regras import detectar
 from leak_hunt.relatorio import (
-    Achado,
-    criar_achado,
-    filtrar_por_limiar,
+    AgregadorAchados,
     formatar_json,
     formatar_texto,
 )
@@ -92,7 +90,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         total_linhas = 0
-        achados: list[Achado] = []
+        agregador = AgregadorAchados()
         exclusoes = carregar_exclusoes(repositorio, argumentos.exclusoes)
         for linha in iterar_linhas_adicionadas(
             repositorio,
@@ -100,15 +98,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             exclusoes=exclusoes,
         ):
             total_linhas += 1
-            achados.extend(
-                criar_achado(linha, deteccao)
-                for deteccao in detectar(linha.conteudo)
-            )
+            for deteccao in detectar(linha.conteudo):
+                agregador.adicionar(linha, deteccao)
     except ErroVarredura as erro:
         print(f"erro: {erro}", file=sys.stderr)
         return 2
 
-    achados = filtrar_por_limiar(achados)
+    achados = agregador.finalizar()
     if argumentos.formato == "json":
         relatorio = formatar_json(achados, total_linhas, repositorio)
     else:

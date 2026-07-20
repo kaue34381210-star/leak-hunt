@@ -2,6 +2,8 @@
 
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime
+import hashlib
 import json
 from pathlib import Path
 
@@ -22,6 +24,86 @@ class Achado:
     linha: int
     trecho_ofuscado: str
     minimo_por_arquivo: int = 1
+    ocorrencias: int = 1
+    arquivos_afetados: tuple[str, ...] = ()
+    primeiro_commit: str = ""
+    commit_mais_recente: str = ""
+
+
+@dataclass(slots=True)
+class _GrupoAchados:
+    codigo: str
+    tipo: str
+    trecho_ofuscado: str
+    minimo_por_arquivo: int
+    ocorrencias: int
+    por_arquivo: Counter[str]
+    primeira_linha: LinhaAdicionada
+    linha_mais_recente: LinhaAdicionada
+
+
+class AgregadorAchados:
+    """Deduplica ocorrências sem manter o valor bruto ou cada ocorrência."""
+
+    def __init__(self) -> None:
+        self._grupos: dict[tuple[str, bytes], _GrupoAchados] = {}
+
+    def adicionar(self, linha: LinhaAdicionada, deteccao: Deteccao) -> None:
+        """Acrescenta uma ocorrência ao grupo do mesmo segredo e regra."""
+        resumo = hashlib.sha256(
+            deteccao.valor.encode("utf-8", errors="surrogatepass")
+        ).digest()
+        chave = (deteccao.codigo, resumo)
+        grupo = self._grupos.get(chave)
+        if grupo is None:
+            self._grupos[chave] = _GrupoAchados(
+                codigo=deteccao.codigo,
+                tipo=deteccao.tipo,
+                trecho_ofuscado=ofuscar(deteccao.valor),
+                minimo_por_arquivo=deteccao.minimo_por_arquivo,
+                ocorrencias=1,
+                por_arquivo=Counter({linha.arquivo: 1}),
+                primeira_linha=linha,
+                linha_mais_recente=linha,
+            )
+            return
+
+        grupo.ocorrencias += 1
+        grupo.por_arquivo[linha.arquivo] += 1
+        if _instante(linha.data) < _instante(grupo.primeira_linha.data):
+            grupo.primeira_linha = linha
+        if _instante(linha.data) > _instante(grupo.linha_mais_recente.data):
+            grupo.linha_mais_recente = linha
+
+    def finalizar(self) -> list[Achado]:
+        """Materializa apenas grupos que atingiram o limiar por arquivo."""
+        achados: list[Achado] = []
+        for grupo in self._grupos.values():
+            if max(grupo.por_arquivo.values()) < grupo.minimo_por_arquivo:
+                continue
+            recente = grupo.linha_mais_recente
+            achados.append(
+                Achado(
+                    codigo=grupo.codigo,
+                    tipo=grupo.tipo,
+                    commit=recente.commit,
+                    autor=recente.autor,
+                    data=recente.data,
+                    arquivo=recente.arquivo,
+                    linha=recente.numero,
+                    trecho_ofuscado=grupo.trecho_ofuscado,
+                    minimo_por_arquivo=grupo.minimo_por_arquivo,
+                    ocorrencias=grupo.ocorrencias,
+                    arquivos_afetados=tuple(sorted(grupo.por_arquivo)),
+                    primeiro_commit=grupo.primeira_linha.commit,
+                    commit_mais_recente=recente.commit,
+                )
+            )
+        return achados
+
+
+def _instante(valor: str) -> datetime:
+    return datetime.fromisoformat(valor)
 
 
 def ofuscar(valor: str) -> str:
@@ -47,6 +129,9 @@ def criar_achado(linha: LinhaAdicionada, deteccao: Deteccao) -> Achado:
         linha=linha.numero,
         trecho_ofuscado=ofuscar(deteccao.valor),
         minimo_por_arquivo=deteccao.minimo_por_arquivo,
+        arquivos_afetados=(linha.arquivo,),
+        primeiro_commit=linha.commit,
+        commit_mais_recente=linha.commit,
     )
 
 
@@ -70,7 +155,8 @@ def formatar_texto(achados: list[Achado], total_linhas: int) -> str:
         )
 
     partes = [
-        f"Possíveis segredos encontrados: {len(achados)}",
+        f"Possíveis segredos únicos encontrados: {len(achados)}",
+        f"Total de ocorrências: {sum(achado.ocorrencias for achado in achados)}",
         f"Linhas adicionadas analisadas: {total_linhas}",
     ]
     for indice, achado in enumerate(achados, start=1):
@@ -82,6 +168,10 @@ def formatar_texto(achados: list[Achado], total_linhas: int) -> str:
                 f"    Autor: {achado.autor}",
                 f"    Data: {achado.data}",
                 f"    Local: {achado.arquivo}:{achado.linha}",
+                f"    Ocorrências: {achado.ocorrencias}",
+                f"    Arquivos afetados: {len(achado.arquivos_afetados) or 1}",
+                f"    Primeiro commit: {achado.primeiro_commit or achado.commit}",
+                f"    Commit mais recente: {achado.commit_mais_recente or achado.commit}",
                 f"    Trecho: {achado.trecho_ofuscado}",
             ]
         )
@@ -100,6 +190,7 @@ def formatar_json(
         "resumo": {
             "linhas_adicionadas_analisadas": total_linhas,
             "total_achados": len(achados),
+            "total_ocorrencias": sum(achado.ocorrencias for achado in achados),
         },
         "achados": [
             {
@@ -111,6 +202,14 @@ def formatar_json(
                 "arquivo": achado.arquivo,
                 "linha": achado.linha,
                 "trecho_ofuscado": achado.trecho_ofuscado,
+                "ocorrencias": achado.ocorrencias,
+                "arquivos_afetados": list(
+                    achado.arquivos_afetados or (achado.arquivo,)
+                ),
+                "primeiro_commit": achado.primeiro_commit or achado.commit,
+                "commit_mais_recente": (
+                    achado.commit_mais_recente or achado.commit
+                ),
             }
             for achado in achados
         ],

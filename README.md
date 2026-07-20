@@ -29,6 +29,8 @@ leak-hunt --exclude 'tests/**' --exclude '**/fixtures/**' /caminho/do/repo
 
 O relatório nunca mostra o valor completo encontrado. O formato JSON usa a
 versão de schema `1` e pode ser consumido por ferramentas de CI.
+Ocorrências repetidas do mesmo segredo são agrupadas com a primeira aparição,
+a mais recente, a quantidade de ocorrências e os arquivos afetados.
 
 Exclusões também podem ser declaradas, uma por linha, em `.leakhuntignore` na
 raiz analisada. Os padrões são globs, são aplicados em ordem e aceitam `!` para
