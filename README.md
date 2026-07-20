@@ -22,12 +22,12 @@ pipx install -e /home/usuario/leak-hunt
 leak-hunt --version
 python -m leak_hunt --version
 leak-hunt /caminho/do/repo
+leak-hunt --since 2024-01-01 /caminho/do/repo
 ```
 
 ## Uso planejado
 
 ```bash
-leak-hunt --since 2024-01-01 .
 leak-hunt --format json . > relatorio.json
 ```
 

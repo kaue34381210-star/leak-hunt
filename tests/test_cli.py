@@ -19,7 +19,18 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
     saida = capsys.readouterr().out
     assert "usage: leak-hunt" in saida
     assert "--version" in saida
+    assert "--since" in saida
     assert "CAMINHO" in saida
+
+
+def test_rejeita_data_since_fora_do_formato_iso(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as erro:
+        main(["--since", "ontem", "."])
+
+    assert erro.value.code == 2
+    assert "AAAA-MM-DD" in capsys.readouterr().err
 
 
 def test_recebe_caminho_do_repositorio(

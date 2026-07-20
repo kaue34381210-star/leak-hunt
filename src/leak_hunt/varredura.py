@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import date
 import re
 import subprocess
 import tempfile
@@ -73,7 +74,10 @@ def _caminho_do_diff(valor: str) -> str | None:
     return valor
 
 
-def iterar_linhas_adicionadas(caminho: Path) -> Iterator[LinhaAdicionada]:
+def iterar_linhas_adicionadas(
+    caminho: Path,
+    desde: date | None = None,
+) -> Iterator[LinhaAdicionada]:
     """Percorre em fluxo todas as linhas adicionadas no histórico Git."""
     repositorio = validar_repositorio(caminho)
     comando = [
@@ -89,8 +93,12 @@ def iterar_linhas_adicionadas(caminho: Path) -> Iterator[LinhaAdicionada]:
         "--no-ext-diff",
         "--no-renames",
         "--unified=0",
-        f"--format={_SEPARADOR_COMMIT}%H{_SEPARADOR_CAMPO}%an{_SEPARADOR_CAMPO}%aI",
     ]
+    if desde is not None:
+        comando.append(f"--since={desde.isoformat()}")
+    comando.append(
+        f"--format={_SEPARADOR_COMMIT}%H{_SEPARADOR_CAMPO}%an{_SEPARADOR_CAMPO}%aI"
+    )
 
     with tempfile.TemporaryFile(mode="w+t", encoding="utf-8") as erros:
         try:

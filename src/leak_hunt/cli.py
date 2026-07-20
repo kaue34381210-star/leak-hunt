@@ -2,6 +2,7 @@
 
 import argparse
 from collections.abc import Sequence
+from datetime import date
 from pathlib import Path
 import sys
 
@@ -21,6 +22,15 @@ from leak_hunt.varredura import (
 from leak_hunt.versao import __version__
 
 
+def _data_iso(valor: str) -> date:
+    try:
+        return date.fromisoformat(valor)
+    except ValueError as erro:
+        raise argparse.ArgumentTypeError(
+            "a data deve estar no formato AAAA-MM-DD"
+        ) from erro
+
+
 def criar_parser() -> argparse.ArgumentParser:
     """Cria o parser da interface de linha de comando."""
     parser = argparse.ArgumentParser(
@@ -31,6 +41,13 @@ def criar_parser() -> argparse.ArgumentParser:
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
+    )
+    parser.add_argument(
+        "--since",
+        dest="desde",
+        metavar="DATA",
+        type=_data_iso,
+        help="analisa apenas commits desde DATA (AAAA-MM-DD)",
     )
     parser.add_argument(
         "caminho",
@@ -59,7 +76,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         total_linhas = 0
         achados: list[Achado] = []
-        for linha in iterar_linhas_adicionadas(repositorio):
+        for linha in iterar_linhas_adicionadas(
+            repositorio,
+            desde=argumentos.desde,
+        ):
             total_linhas += 1
             achados.extend(
                 criar_achado(linha, deteccao)

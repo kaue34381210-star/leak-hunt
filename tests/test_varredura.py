@@ -1,3 +1,5 @@
+from datetime import date
+import os
 import subprocess
 
 import pytest
@@ -82,3 +84,35 @@ def test_preserva_sinais_de_mais_do_conteudo(tmp_path) -> None:
     linhas = list(iterar_linhas_adicionadas(tmp_path))
 
     assert [linha.conteudo for linha in linhas] == ["++ valor"]
+
+
+def test_filtra_historico_por_data(tmp_path) -> None:
+    _preparar_repositorio(tmp_path)
+    arquivo = tmp_path / "historico.txt"
+    arquivo.write_text("conteúdo antigo\n", encoding="utf-8")
+    _git(tmp_path, "add", ".")
+    ambiente_antigo = os.environ | {
+        "GIT_AUTHOR_DATE": "2024-01-01T12:00:00+0000",
+        "GIT_COMMITTER_DATE": "2024-01-01T12:00:00+0000",
+    }
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-q", "-m", "antigo"],
+        check=True,
+        env=ambiente_antigo,
+    )
+
+    arquivo.write_text("conteúdo antigo\nconteúdo novo\n", encoding="utf-8")
+    _git(tmp_path, "add", ".")
+    ambiente_novo = os.environ | {
+        "GIT_AUTHOR_DATE": "2026-01-01T12:00:00+0000",
+        "GIT_COMMITTER_DATE": "2026-01-01T12:00:00+0000",
+    }
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-q", "-m", "novo"],
+        check=True,
+        env=ambiente_novo,
+    )
+
+    linhas = list(iterar_linhas_adicionadas(tmp_path, desde=date(2025, 1, 1)))
+
+    assert [linha.conteudo for linha in linhas] == ["conteúdo novo"]
