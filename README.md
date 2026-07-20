@@ -10,13 +10,20 @@ Roda 100% local — nenhum segredo sai da sua máquina.
 
 Em desenvolvimento inicial. Não usar em produção ainda.
 
-## Instalação (planejada)
+## Instalação para desenvolvimento
 
 ```bash
-pipx install leak-hunt
+pipx install -e /home/usuario/leak-hunt
 ```
 
-## Uso (planejado)
+## Uso atual
+
+```bash
+leak-hunt --version
+python -m leak_hunt --version
+```
+
+## Uso planejado
 
 ```bash
 leak-hunt /caminho/do/repo
