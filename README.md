@@ -1,8 +1,8 @@
 # leak-hunt
 
 Scanner de segredos em histórico Git, com regras focadas no contexto brasileiro.
-
-Vai além do padrão internacional (AWS/GCP/Slack tokens) e detecta o que costuma passar batido em code review no Brasil: chaves PIX, tokens Serpro, certificados e-CNPJ, strings de conexão de contabilidade, dados sensíveis LGPD (CPF/CNPJ hardcoded, CEP em log).
+O MVP combina formatos genéricos selecionados com chaves PIX e validação por
+dígito verificador de CPF/CNPJ.
 
 Roda 100% local — nenhum segredo sai da sua máquina.
 
@@ -44,6 +44,24 @@ regras específicas. Quando usados juntos, `--skip` prevalece.
 Por padrão, `--refs all` cobre todas as referências. Use `--refs head` para
 somente o histórico alcançável pelo `HEAD` ou `--refs branches` para branches
 locais.
+
+## Escopo e limitações
+
+- O leak-hunt é complementar a gitleaks e trufflehog. Use essas ferramentas
+  quando precisar de cobertura genérica ampla; use o leak-hunt também quando
+  precisar das regras brasileiras e validações locais.
+- O contexto PIX é avaliado na mesma linha do valor. Um comentário em outra
+  linha ou no topo do arquivo não é usado como contexto.
+- O histórico textual é decodificado como UTF-8. Bytes inválidos, comuns em
+  commits antigos em outras codificações, são substituídos por `�`; a
+  varredura continua, mas uma regra dependente de texto acentuado pode perder
+  precisão.
+- A regra de chave privada considera o cabeçalho isolado um indício suficiente;
+  ela não exige nem valida o corpo criptográfico.
+- A análise atual cobre linhas adicionadas em patches. Arquivos binários, como
+  certificados `.pfx` e `.p12`, exigirão uma futura análise de blobs.
+- Nenhuma regra consulta serviços externos para confirmar credenciais. A
+  execução permanece integralmente local.
 
 ## Códigos de saída
 
