@@ -130,7 +130,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             refs=argumentos.refs,
         ):
             total_linhas += 1
-            for deteccao in detectar(linha.conteudo, regras=regras):
+            for deteccao in detectar(
+                linha.conteudo,
+                regras=regras,
+                arquivo=linha.arquivo,
+            ):
                 agregador.adicionar(linha, deteccao)
     except ErroVarredura as erro:
         print(f"erro: {erro}", file=sys.stderr)

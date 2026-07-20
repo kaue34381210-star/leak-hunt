@@ -57,6 +57,8 @@ locais.
 - Chaves PIX por e-mail, EVP, CPF e CNPJ em contexto PIX.
 - CPF e CNPJ hardcoded, com dígitos válidos e no mínimo cinco ocorrências no
   mesmo arquivo.
+- Valores não vazios versionados em `.env` e variantes como `.env.production`;
+  arquivos de modelo (`.example`, `.sample`, `.template`, `.dist`) são ignorados.
 
 ## Licença
 

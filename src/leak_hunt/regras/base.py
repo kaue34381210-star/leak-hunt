@@ -6,6 +6,7 @@ import re
 
 
 Validador = Callable[[re.Match[str], str], bool]
+ValidadorArquivo = Callable[[str], bool]
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,18 +29,29 @@ class Regra:
     tipo: str
     padrao: re.Pattern[str]
     validador: Validador | None = None
+    validador_arquivo: ValidadorArquivo | None = None
+    grupo_valor: int | str = 0
     minimo_por_arquivo: int = 1
 
-    def procurar(self, texto: str) -> Iterator[Deteccao]:
+    def procurar(
+        self,
+        texto: str,
+        arquivo: str | None = None,
+    ) -> Iterator[Deteccao]:
         """Produz as correspondências válidas encontradas no texto."""
+        if self.validador_arquivo and (
+            arquivo is None or not self.validador_arquivo(arquivo)
+        ):
+            return
         for correspondencia in self.padrao.finditer(texto):
             if self.validador and not self.validador(correspondencia, texto):
                 continue
+            valor = correspondencia.group(self.grupo_valor)
             yield Deteccao(
                 codigo=self.codigo,
                 tipo=self.tipo,
-                valor=correspondencia.group(0),
-                inicio=correspondencia.start(),
-                fim=correspondencia.end(),
+                valor=valor,
+                inicio=correspondencia.start(self.grupo_valor),
+                fim=correspondencia.end(self.grupo_valor),
                 minimo_por_arquivo=self.minimo_por_arquivo,
             )
