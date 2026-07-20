@@ -8,7 +8,7 @@ Roda 100% local — nenhum segredo sai da sua máquina.
 
 ## Status
 
-Em desenvolvimento inicial. Não usar em produção ainda.
+MVP funcional em desenvolvimento. Ainda não publicado no PyPI.
 
 ## Instalação para desenvolvimento
 
@@ -23,13 +23,24 @@ leak-hunt --version
 python -m leak_hunt --version
 leak-hunt /caminho/do/repo
 leak-hunt --since 2024-01-01 /caminho/do/repo
+leak-hunt --format json /caminho/do/repo > relatorio.json
 ```
 
-## Uso planejado
+O relatório nunca mostra o valor completo encontrado. O formato JSON usa a
+versão de schema `1` e pode ser consumido por ferramentas de CI.
 
-```bash
-leak-hunt --format json . > relatorio.json
-```
+## Códigos de saída
+
+- `0`: varredura concluída sem achados.
+- `1`: um ou mais possíveis segredos encontrados.
+- `2`: caminho, argumento ou execução do Git inválidos.
+
+## Regras do MVP
+
+- AWS Access Key, cabeçalhos de chave privada e JWT.
+- Chaves PIX por e-mail, EVP, CPF e CNPJ em contexto PIX.
+- CPF e CNPJ hardcoded, com dígitos válidos e no mínimo cinco ocorrências no
+  mesmo arquivo.
 
 ## Licença
 

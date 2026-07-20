@@ -2,6 +2,8 @@
 
 from collections import Counter
 from dataclasses import dataclass
+import json
+from pathlib import Path
 
 from leak_hunt.regras import Deteccao
 from leak_hunt.varredura import LinhaAdicionada
@@ -84,3 +86,33 @@ def formatar_texto(achados: list[Achado], total_linhas: int) -> str:
             ]
         )
     return "\n".join(partes)
+
+
+def formatar_json(
+    achados: list[Achado],
+    total_linhas: int,
+    repositorio: Path,
+) -> str:
+    """Formata o relatório no schema JSON público da versão 1."""
+    documento = {
+        "versao_schema": 1,
+        "repositorio": str(repositorio),
+        "resumo": {
+            "linhas_adicionadas_analisadas": total_linhas,
+            "total_achados": len(achados),
+        },
+        "achados": [
+            {
+                "codigo": achado.codigo,
+                "tipo": achado.tipo,
+                "commit": achado.commit,
+                "autor": achado.autor,
+                "data": achado.data,
+                "arquivo": achado.arquivo,
+                "linha": achado.linha,
+                "trecho_ofuscado": achado.trecho_ofuscado,
+            }
+            for achado in achados
+        ],
+    }
+    return json.dumps(documento, ensure_ascii=False, indent=2)

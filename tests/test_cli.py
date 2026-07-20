@@ -1,3 +1,4 @@
+import json
 import subprocess
 
 import pytest
@@ -20,6 +21,7 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
     assert "usage: leak-hunt" in saida
     assert "--version" in saida
     assert "--since" in saida
+    assert "--format" in saida
     assert "CAMINHO" in saida
 
 
@@ -56,6 +58,21 @@ def test_rejeita_diretorio_sem_repositorio(
     captura = capsys.readouterr()
     assert captura.out == ""
     assert "não é um repositório Git" in captura.err
+
+
+def test_emite_json_valido_para_repositorio_sem_achados(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+
+    assert main(["--format", "json", str(tmp_path)]) == 0
+
+    documento = json.loads(capsys.readouterr().out)
+    assert documento["versao_schema"] == 1
+    assert documento["repositorio"] == str(tmp_path)
+    assert documento["resumo"]["total_achados"] == 0
+    assert documento["achados"] == []
 
 
 def test_retorna_um_e_ofusca_quando_encontra_segredo(

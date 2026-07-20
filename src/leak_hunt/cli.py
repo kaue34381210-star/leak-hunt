@@ -11,6 +11,7 @@ from leak_hunt.relatorio import (
     Achado,
     criar_achado,
     filtrar_por_limiar,
+    formatar_json,
     formatar_texto,
 )
 from leak_hunt.varredura import (
@@ -48,6 +49,13 @@ def criar_parser() -> argparse.ArgumentParser:
         metavar="DATA",
         type=_data_iso,
         help="analisa apenas commits desde DATA (AAAA-MM-DD)",
+    )
+    parser.add_argument(
+        "--format",
+        dest="formato",
+        choices=("text", "json"),
+        default="text",
+        help="formato do relatório (padrão: text)",
     )
     parser.add_argument(
         "caminho",
@@ -90,5 +98,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     achados = filtrar_por_limiar(achados)
-    print(formatar_texto(achados, total_linhas))
+    if argumentos.formato == "json":
+        relatorio = formatar_json(achados, total_linhas, repositorio)
+    else:
+        relatorio = formatar_texto(achados, total_linhas)
+    print(relatorio)
     return 1 if achados else 0
