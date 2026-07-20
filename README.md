@@ -26,6 +26,7 @@ leak-hunt --since 2024-01-01 /caminho/do/repo
 leak-hunt --format json /caminho/do/repo > relatorio.json
 leak-hunt --exclude 'tests/**' --exclude '**/fixtures/**' /caminho/do/repo
 leak-hunt --only pix-email --skip cpf-hardcoded /caminho/do/repo
+leak-hunt --refs head /caminho/do/repo
 ```
 
 O relatório nunca mostra o valor completo encontrado. O formato JSON usa a
@@ -39,6 +40,10 @@ reincluir um caminho. Nada é ignorado por padrão.
 
 `--only CODE` e `--skip CODE` podem ser repetidos para ativar ou silenciar
 regras específicas. Quando usados juntos, `--skip` prevalece.
+
+Por padrão, `--refs all` cobre todas as referências. Use `--refs head` para
+somente o histórico alcançável pelo `HEAD` ou `--refs branches` para branches
+locais.
 
 ## Códigos de saída
 

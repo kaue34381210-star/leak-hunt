@@ -57,6 +57,12 @@ def criar_parser() -> argparse.ArgumentParser:
         help="formato do relatório (padrão: text)",
     )
     parser.add_argument(
+        "--refs",
+        choices=("all", "head", "branches"),
+        default="all",
+        help="referências Git analisadas (padrão: all)",
+    )
+    parser.add_argument(
         "--exclude",
         dest="exclusoes",
         action="append",
@@ -121,6 +127,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             repositorio,
             desde=argumentos.desde,
             exclusoes=exclusoes,
+            refs=argumentos.refs,
         ):
             total_linhas += 1
             for deteccao in detectar(linha.conteudo, regras=regras):

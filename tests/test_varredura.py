@@ -131,3 +131,21 @@ def test_exclui_caminhos_por_glob(tmp_path) -> None:
     linhas = list(iterar_linhas_adicionadas(tmp_path, exclusoes=("tests/",)))
 
     assert [linha.conteudo for linha in linhas] == ["código real"]
+
+
+def test_limita_varredura_ao_head_ou_branches(tmp_path) -> None:
+    _preparar_repositorio(tmp_path)
+    (tmp_path / "base.txt").write_text("base\n", encoding="utf-8")
+    _commit(tmp_path, "base")
+    principal = _git(tmp_path, "branch", "--show-current").stdout.strip()
+
+    _git(tmp_path, "checkout", "-q", "-b", "lateral")
+    (tmp_path / "lateral.txt").write_text("somente lateral\n", encoding="utf-8")
+    _commit(tmp_path, "lateral")
+    _git(tmp_path, "checkout", "-q", principal)
+
+    linhas_head = list(iterar_linhas_adicionadas(tmp_path, refs="head"))
+    linhas_branches = list(iterar_linhas_adicionadas(tmp_path, refs="branches"))
+
+    assert "somente lateral" not in [linha.conteudo for linha in linhas_head]
+    assert "somente lateral" in [linha.conteudo for linha in linhas_branches]

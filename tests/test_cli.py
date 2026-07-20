@@ -22,6 +22,7 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
     assert "--version" in saida
     assert "--since" in saida
     assert "--format" in saida
+    assert "--refs" in saida
     assert "--exclude" in saida
     assert "--only" in saida
     assert "--skip" in saida

@@ -80,6 +80,7 @@ def iterar_linhas_adicionadas(
     caminho: Path,
     desde: date | None = None,
     exclusoes: Sequence[str] = (),
+    refs: str = "all",
 ) -> Iterator[LinhaAdicionada]:
     """Percorre em fluxo todas as linhas adicionadas no histórico Git."""
     repositorio = validar_repositorio(caminho)
@@ -91,7 +92,6 @@ def iterar_linhas_adicionadas(
         str(repositorio),
         "log",
         "--patch",
-        "--all",
         "--full-history",
         "--no-ext-diff",
         "--no-renames",
@@ -102,6 +102,14 @@ def iterar_linhas_adicionadas(
     comando.append(
         f"--format={_SEPARADOR_COMMIT}%H{_SEPARADOR_CAMPO}%an{_SEPARADOR_CAMPO}%aI"
     )
+    if refs == "all":
+        comando.append("--all")
+    elif refs == "head":
+        comando.append("HEAD")
+    elif refs == "branches":
+        comando.append("--branches")
+    else:
+        raise ErroVarredura(f"escopo de referências inválido: {refs}")
 
     with tempfile.TemporaryFile(mode="w+t", encoding="utf-8") as erros:
         try:
