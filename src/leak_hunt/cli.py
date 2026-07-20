@@ -6,6 +6,7 @@ from datetime import date
 from pathlib import Path
 import sys
 
+from leak_hunt.exclusoes import carregar_exclusoes
 from leak_hunt.regras import detectar
 from leak_hunt.relatorio import (
     Achado,
@@ -58,6 +59,14 @@ def criar_parser() -> argparse.ArgumentParser:
         help="formato do relatório (padrão: text)",
     )
     parser.add_argument(
+        "--exclude",
+        dest="exclusoes",
+        action="append",
+        default=[],
+        metavar="GLOB",
+        help="ignora caminhos que casem com GLOB; pode ser repetido",
+    )
+    parser.add_argument(
         "caminho",
         metavar="CAMINHO",
         nargs="?",
@@ -84,9 +93,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         total_linhas = 0
         achados: list[Achado] = []
+        exclusoes = carregar_exclusoes(repositorio, argumentos.exclusoes)
         for linha in iterar_linhas_adicionadas(
             repositorio,
             desde=argumentos.desde,
+            exclusoes=exclusoes,
         ):
             total_linhas += 1
             achados.extend(

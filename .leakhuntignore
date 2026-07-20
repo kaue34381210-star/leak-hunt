@@ -1,0 +1,3 @@
+# Fixtures deliberadamente falsas usadas para testar os detectores.
+tests/test_regras_genericas.py
+tests/test_regras_brasil.py

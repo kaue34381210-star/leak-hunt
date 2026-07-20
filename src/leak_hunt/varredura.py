@@ -1,12 +1,14 @@
 """Acesso local aos repositórios Git analisados pelo leak-hunt."""
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from datetime import date
 import re
 import subprocess
 import tempfile
 from pathlib import Path
+
+from leak_hunt.exclusoes import caminho_excluido
 
 
 _SEPARADOR_COMMIT = "\x1e"
@@ -77,6 +79,7 @@ def _caminho_do_diff(valor: str) -> str | None:
 def iterar_linhas_adicionadas(
     caminho: Path,
     desde: date | None = None,
+    exclusoes: Sequence[str] = (),
 ) -> Iterator[LinhaAdicionada]:
     """Percorre em fluxo todas as linhas adicionadas no histórico Git."""
     repositorio = validar_repositorio(caminho)
@@ -150,14 +153,15 @@ def iterar_linhas_adicionadas(
                     continue
 
                 if linha.startswith("+"):
-                    yield LinhaAdicionada(
-                        commit=commit,
-                        autor=autor,
-                        data=data,
-                        arquivo=arquivo,
-                        numero=numero,
-                        conteudo=linha[1:],
-                    )
+                    if not caminho_excluido(arquivo, exclusoes):
+                        yield LinhaAdicionada(
+                            commit=commit,
+                            autor=autor,
+                            data=data,
+                            arquivo=arquivo,
+                            numero=numero,
+                            conteudo=linha[1:],
+                        )
                     numero += 1
                 elif not linha.startswith(("-", "\\")):
                     numero += 1

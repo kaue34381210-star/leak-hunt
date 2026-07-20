@@ -116,3 +116,18 @@ def test_filtra_historico_por_data(tmp_path) -> None:
     linhas = list(iterar_linhas_adicionadas(tmp_path, desde=date(2025, 1, 1)))
 
     assert [linha.conteudo for linha in linhas] == ["conteúdo novo"]
+
+
+def test_exclui_caminhos_por_glob(tmp_path) -> None:
+    _preparar_repositorio(tmp_path)
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "fixture.txt").write_text(
+        "segredo de teste\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "codigo.py").write_text("código real\n", encoding="utf-8")
+    _commit(tmp_path, "adiciona arquivos")
+
+    linhas = list(iterar_linhas_adicionadas(tmp_path, exclusoes=("tests/",)))
+
+    assert [linha.conteudo for linha in linhas] == ["código real"]

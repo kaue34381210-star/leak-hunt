@@ -24,10 +24,15 @@ python -m leak_hunt --version
 leak-hunt /caminho/do/repo
 leak-hunt --since 2024-01-01 /caminho/do/repo
 leak-hunt --format json /caminho/do/repo > relatorio.json
+leak-hunt --exclude 'tests/**' --exclude '**/fixtures/**' /caminho/do/repo
 ```
 
 O relatório nunca mostra o valor completo encontrado. O formato JSON usa a
 versão de schema `1` e pode ser consumido por ferramentas de CI.
+
+Exclusões também podem ser declaradas, uma por linha, em `.leakhuntignore` na
+raiz analisada. Os padrões são globs, são aplicados em ordem e aceitam `!` para
+reincluir um caminho. Nada é ignorado por padrão.
 
 ## Códigos de saída
 
