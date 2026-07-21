@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from leak_hunt.baseline import criar_fingerprint
 from leak_hunt.regras import Deteccao, Severidade
 from leak_hunt.varredura import LinhaAdicionada
 
@@ -42,16 +43,28 @@ class _GrupoAchados:
     por_arquivo: Counter[str]
     primeira_linha: LinhaAdicionada
     linha_mais_recente: LinhaAdicionada
+    fingerprints: set[str]
 
 
 class AgregadorAchados:
     """Deduplica ocorrências sem manter o valor bruto ou cada ocorrência."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        fingerprints_ignorados: frozenset[str] = frozenset(),
+    ) -> None:
         self._grupos: dict[tuple[str, bytes], _GrupoAchados] = {}
+        self._fingerprints_ignorados = fingerprints_ignorados
 
     def adicionar(self, linha: LinhaAdicionada, deteccao: Deteccao) -> None:
         """Acrescenta uma ocorrência ao grupo do mesmo segredo e regra."""
+        fingerprint = criar_fingerprint(
+            deteccao.codigo,
+            deteccao.valor,
+            linha.arquivo,
+        )
+        if fingerprint in self._fingerprints_ignorados:
+            return
         resumo = hashlib.sha256(
             deteccao.valor.encode("utf-8", errors="surrogatepass")
         ).digest()
@@ -68,11 +81,13 @@ class AgregadorAchados:
                 por_arquivo=Counter({linha.arquivo: 1}),
                 primeira_linha=linha,
                 linha_mais_recente=linha,
+                fingerprints={fingerprint},
             )
             return
 
         grupo.ocorrencias += 1
         grupo.por_arquivo[linha.arquivo] += 1
+        grupo.fingerprints.add(fingerprint)
         if _instante(linha.data) < _instante(grupo.primeira_linha.data):
             grupo.primeira_linha = linha
         if _instante(linha.data) > _instante(grupo.linha_mais_recente.data):
@@ -104,6 +119,15 @@ class AgregadorAchados:
                 )
             )
         return achados
+
+    def fingerprints(self) -> set[str]:
+        """Retorna fingerprints apenas dos grupos que virariam achados."""
+        return {
+            fingerprint
+            for grupo in self._grupos.values()
+            if max(grupo.por_arquivo.values()) >= grupo.minimo_por_arquivo
+            for fingerprint in grupo.fingerprints
+        }
 
 
 def _instante(valor: str) -> datetime:

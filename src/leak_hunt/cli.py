@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 from typing import cast
 
+from leak_hunt.baseline import ErroBaseline, carregar_baseline, salvar_baseline
 from leak_hunt.exclusoes import carregar_exclusoes
 from leak_hunt.regras import (
     ErroSelecaoRegras,
@@ -121,6 +122,11 @@ def criar_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--update-baseline",
+        action="store_true",
+        help="substitui a baseline pelos achados atuais e retorna 0",
+    )
+    parser.add_argument(
         "caminho",
         metavar="CAMINHO",
         nargs="?",
@@ -138,6 +144,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("--staged não pode ser combinado com --since")
     if argumentos.staged and argumentos.refs != "all":
         parser.error("--staged não pode ser combinado com --refs")
+    if argumentos.update_baseline and (
+        argumentos.staged
+        or argumentos.desde is not None
+        or argumentos.refs != "all"
+        or argumentos.somente_regras
+        or argumentos.ignorar_regras
+        or argumentos.exclusoes
+    ):
+        parser.error(
+            "--update-baseline exige a varredura completa, sem filtros da CLI"
+        )
 
     caminho = argumentos.caminho
     if caminho is None and argumentos.staged:
@@ -163,7 +180,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         total_linhas = 0
-        agregador = AgregadorAchados()
+        fingerprints_ignorados = (
+            frozenset()
+            if argumentos.update_baseline
+            else carregar_baseline(repositorio)
+        )
+        agregador = AgregadorAchados(fingerprints_ignorados)
         exclusoes = carregar_exclusoes(repositorio, argumentos.exclusoes)
         if argumentos.staged:
             linhas = iterar_linhas_staged(repositorio, exclusoes=exclusoes)
@@ -182,16 +204,33 @@ def main(argv: Sequence[str] | None = None) -> int:
                 arquivo=linha.arquivo,
             ):
                 agregador.adicionar(linha, deteccao)
-    except ErroVarredura as erro:
+    except (ErroBaseline, ErroVarredura) as erro:
         print(f"erro: {erro}", file=sys.stderr)
         return 2
 
     achados = agregador.finalizar()
+    if argumentos.update_baseline:
+        fingerprints = agregador.fingerprints()
+        try:
+            caminho_baseline = salvar_baseline(
+                repositorio,
+                fingerprints,
+            )
+        except ErroBaseline as erro:
+            print(f"erro: {erro}", file=sys.stderr)
+            return 2
+        print(
+            f"Baseline atualizada: {caminho_baseline} "
+            f"({len(fingerprints)} fingerprints)",
+            file=sys.stderr,
+        )
     if argumentos.formato == "json":
         relatorio = formatar_json(achados, total_linhas, repositorio)
     else:
         relatorio = formatar_texto(achados, total_linhas)
     print(relatorio)
+    if argumentos.update_baseline:
+        return 0
     if argumentos.falhar_em is None:
         return 1 if achados else 0
     return int(

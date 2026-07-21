@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from leak_hunt.baseline import criar_fingerprint
 from leak_hunt.regras import Deteccao
 from leak_hunt.relatorio import (
     Achado,
@@ -159,6 +160,32 @@ def test_agregador_respeita_limiar_por_arquivo() -> None:
 
     agregador.adicionar(linha, deteccao)
     assert agregador.finalizar()[0].ocorrencias == 5
+
+
+def test_agregador_ignora_fingerprint_da_baseline() -> None:
+    segredo = "AKIA" + "BASE" + "0" * 12
+    linha = LinhaAdicionada(
+        commit="a" * 40,
+        autor="Teste",
+        data="2026-01-01T10:00:00+00:00",
+        arquivo="config.py",
+        numero=1,
+        conteudo=segredo,
+    )
+    deteccao = Deteccao(
+        codigo="aws-access-key",
+        tipo="AWS Access Key",
+        valor=segredo,
+        inicio=0,
+        fim=len(segredo),
+    )
+    fingerprint = criar_fingerprint(deteccao.codigo, segredo, linha.arquivo)
+    agregador = AgregadorAchados(frozenset({fingerprint}))
+
+    agregador.adicionar(linha, deteccao)
+
+    assert agregador.finalizar() == []
+    assert agregador.fingerprints() == set()
 
 
 def test_formata_json_sem_expor_segredo() -> None:

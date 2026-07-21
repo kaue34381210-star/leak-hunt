@@ -16,4 +16,5 @@ Primeiro MVP funcional.
 - Allowlist exata para exemplos públicos conhecidos da AWS e do jwt.io.
 - Severidade por regra e política de saída configurável com `--fail-on`.
 - Varredura preventiva do index com `--staged` e hook para pre-commit.
+- Baseline versionada para suprimir achados conhecidos sem persistir valores.
 - Suporte a Python 3.10–3.13 com cobertura mínima automatizada de 85%.

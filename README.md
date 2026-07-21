@@ -37,6 +37,7 @@ leak-hunt --only pix-email --skip cpf-hardcoded /caminho/do/repo
 leak-hunt --refs head /caminho/do/repo
 leak-hunt --fail-on critico,alto /caminho/do/repo
 leak-hunt --staged /caminho/do/repo
+leak-hunt --update-baseline /caminho/do/repo
 ```
 
 O relatório nunca mostra o valor completo encontrado. O formato JSON usa a
@@ -60,6 +61,22 @@ locais.
 caminho pode ser omitido nesse modo, usando o diretório atual. O repositório
 também fornece o hook `leak-hunt` em `.pre-commit-hooks.yaml`, com
 `pass_filenames: false`, para integração com o framework pre-commit.
+
+## Baseline
+
+Para aceitar os achados atuais e fazer o CI falhar apenas em achados novos:
+
+```bash
+leak-hunt --update-baseline /caminho/do/repo
+git add .leakhuntbaseline.json
+```
+
+A baseline guarda somente fingerprints SHA-256 versionadas de
+`regra + caminho + valor`; o valor bruto nunca é persistido. Uma mudança no
+valor ou no caminho volta a produzir um achado. A atualização exige uma
+varredura completa, sem `--staged`, `--since`, `--refs`, `--only`, `--skip` ou
+`--exclude` fornecido pela CLI. As regras de `.leakhuntignore` continuam sendo
+aplicadas.
 
 ## Escopo e limitações
 

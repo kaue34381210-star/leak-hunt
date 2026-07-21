@@ -28,6 +28,7 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
     assert "--only" in saida
     assert "--skip" in saida
     assert "--fail-on" in saida
+    assert "--update-baseline" in saida
     assert "CAMINHO" in saida
 
 
@@ -188,3 +189,41 @@ def test_staged_detecta_index_sem_caminho_explicito(
     assert "AWS Access Key" in saida
     assert "Commit: INDEX" in saida
     assert segredo not in saida
+
+
+def test_atualiza_baseline_e_suprime_achado_existente(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    segredo = "AKIA" + "BASE" + "0" * 12
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.name", "Teste"],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(tmp_path),
+            "config",
+            "user.email",
+            "teste@example.invalid",
+        ],
+        check=True,
+    )
+    (tmp_path / "config.py").write_text(segredo + "\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-q", "-m", "segredo"],
+        check=True,
+    )
+
+    assert main(["--update-baseline", str(tmp_path)]) == 0
+    captura = capsys.readouterr()
+    baseline = (tmp_path / ".leakhuntbaseline.json").read_text(encoding="utf-8")
+    assert "Baseline atualizada" in captura.err
+    assert segredo not in baseline
+
+    assert main([str(tmp_path)]) == 0
+    assert "Nenhum segredo encontrado" in capsys.readouterr().out
