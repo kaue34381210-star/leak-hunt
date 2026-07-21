@@ -30,6 +30,10 @@ dev = ["pytest>=7", "pytest-cov>=5"]
 [project.scripts]
 leak-hunt = "leak_hunt.cli:main"
 
+[project.urls]
+Repository = "https://github.com/kaue34381210-star/leak-hunt"
+Issues = "https://github.com/kaue34381210-star/leak-hunt/issues"
+
 [tool.setuptools.dynamic]
 version = { attr = "leak_hunt.versao.__version__" }
 

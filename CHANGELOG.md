@@ -18,4 +18,5 @@ Primeiro MVP funcional.
 - Varredura preventiva do index com `--staged` e hook para pre-commit.
 - Baseline versionada para suprimir achados conhecidos sem persistir valores.
 - Teste ponta a ponta da CLI contra um histórico Git temporário real.
+- Release por tag para o PyPI via Trusted Publishing, sem token persistente.
 - Suporte a Python 3.10–3.13 com cobertura mínima automatizada de 85%.

@@ -12,6 +12,13 @@ Roda 100% local — nenhum segredo sai da sua máquina.
 
 Versão `0.1.0` preparada. Ainda não publicada no PyPI.
 
+O workflow `.github/workflows/release.yml` publica tags `v*` pelo Trusted
+Publishing do PyPI, sem token persistente. Antes da primeira tag, é necessário
+registrar o publisher para o repositório `kaue34381210-star/leak-hunt`, workflow
+`release.yml` e environment `pypi`, configurando aprovação manual nesse
+environment. A tag precisa coincidir com a versão do pacote, por exemplo
+`v0.1.0`.
+
 ## Instalação para desenvolvimento
 
 ```bash
