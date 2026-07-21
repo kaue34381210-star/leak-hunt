@@ -13,7 +13,7 @@ authors = [
   { name = "kaue34381210-star", email = "kaue34381210@gmail.com" },
 ]
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
+  "Development Status :: 3 - Alpha",
   "Environment :: Console",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",

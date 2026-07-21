@@ -15,7 +15,7 @@ Versão `0.1.0` preparada. Ainda não publicada no PyPI.
 ## Instalação para desenvolvimento
 
 ```bash
-pipx install -e /home/usuario/leak-hunt
+pipx install -e .
 ```
 
 Depois da publicação no PyPI, a instalação será:
