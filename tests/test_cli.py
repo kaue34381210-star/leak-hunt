@@ -26,6 +26,7 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
     assert "--exclude" in saida
     assert "--only" in saida
     assert "--skip" in saida
+    assert "--fail-on" in saida
     assert "CAMINHO" in saida
 
 
@@ -45,6 +46,16 @@ def test_rejeita_codigo_de_regra_desconhecido(
     assert main(["--only", "inexistente", "."]) == 2
 
     assert "código de regra desconhecido" in capsys.readouterr().err
+
+
+def test_rejeita_severidade_desconhecida(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as erro:
+        main(["--fail-on", "urgente", "."])
+
+    assert erro.value.code == 2
+    assert "severidade inválida" in capsys.readouterr().err
 
 
 def test_recebe_caminho_do_repositorio(
@@ -125,6 +136,11 @@ def test_retorna_um_e_ofusca_quando_encontra_segredo(
 
     saida = capsys.readouterr().out
     assert "AWS Access Key" in saida
+    assert "Severidade: critico" in saida
     assert "config.py:1" in saida
     assert segredo not in saida
     assert "AKIA…0000" in saida
+
+    assert main(["--fail-on", "alto,medio", str(tmp_path)]) == 0
+    capsys.readouterr()
+    assert main(["--fail-on", "critico,alto", str(tmp_path)]) == 1

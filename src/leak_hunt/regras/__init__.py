@@ -3,7 +3,7 @@
 from collections.abc import Iterable, Iterator
 
 from leak_hunt.regras.ambiente import REGRAS_AMBIENTE
-from leak_hunt.regras.base import Deteccao, Regra
+from leak_hunt.regras.base import Deteccao, Regra, SEVERIDADES, Severidade
 from leak_hunt.regras.brasil import REGRAS_BRASIL
 from leak_hunt.regras.genericos import REGRAS_GENERICAS
 
@@ -51,6 +51,8 @@ __all__ = [
     "ErroSelecaoRegras",
     "REGRAS",
     "Regra",
+    "SEVERIDADES",
+    "Severidade",
     "detectar",
     "selecionar_regras",
 ]

@@ -9,6 +9,7 @@ def test_detecta_valor_nao_vazio_em_env_real(arquivo: str) -> None:
 
     assert [item.codigo for item in deteccoes] == ["env-value"]
     assert deteccoes[0].valor == "valor-falso"
+    assert deteccoes[0].severidade == "alto"
 
 
 @pytest.mark.parametrize(

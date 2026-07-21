@@ -55,6 +55,7 @@ REGRAS_BRASIL = (
             r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+(?![\w.-])"
         ),
         validador=_somente_em_contexto_pix,
+        severidade="medio",
     ),
     Regra(
         codigo="pix-evp",
@@ -65,18 +66,21 @@ REGRAS_BRASIL = (
             re.IGNORECASE,
         ),
         validador=_somente_em_contexto_pix,
+        severidade="medio",
     ),
     Regra(
         codigo="pix-cpf",
         tipo="Chave PIX por CPF",
         padrao=_CPF,
         validador=_cpf_pix,
+        severidade="medio",
     ),
     Regra(
         codigo="pix-cnpj",
         tipo="Chave PIX por CNPJ",
         padrao=_CNPJ,
         validador=_cnpj_pix,
+        severidade="medio",
     ),
     Regra(
         codigo="cpf-hardcoded",
@@ -84,6 +88,7 @@ REGRAS_BRASIL = (
         padrao=_CPF,
         validador=_cpf_hardcoded,
         minimo_por_arquivo=5,
+        severidade="medio",
     ),
     Regra(
         codigo="cnpj-hardcoded",
@@ -91,5 +96,6 @@ REGRAS_BRASIL = (
         padrao=_CNPJ,
         validador=_cnpj_hardcoded,
         minimo_por_arquivo=5,
+        severidade="medio",
     ),
 )

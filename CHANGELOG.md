@@ -14,4 +14,5 @@ Primeiro MVP funcional.
 - Exclusões por glob, `.leakhuntignore`, seleção de regras e escopo de refs.
 - Deduplicação com contagem de ocorrências e arquivos afetados.
 - Allowlist exata para exemplos públicos conhecidos da AWS e do jwt.io.
+- Severidade por regra e política de saída configurável com `--fail-on`.
 - Suporte a Python 3.10–3.13 com cobertura mínima automatizada de 85%.

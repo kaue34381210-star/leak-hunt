@@ -35,11 +35,13 @@ def test_formata_metadados_e_trecho_ofuscado() -> None:
         valor=segredo,
         inicio=9,
         fim=29,
+        severidade="critico",
     )
 
     relatorio = formatar_texto([criar_achado(linha, deteccao)], 10)
 
     assert "AWS Access Key (aws-access-key)" in relatorio
+    assert "Severidade: critico" in relatorio
     assert "config.py:8" in relatorio
     assert "Pessoa de Teste" in relatorio
     assert segredo not in relatorio
@@ -102,6 +104,7 @@ def test_deduplica_segredo_e_agrega_origens() -> None:
     assert achados[0].arquivos_afetados == ("a.py", "b.py")
     assert achados[0].primeiro_commit == "a" * 40
     assert achados[0].commit_mais_recente == "b" * 40
+    assert achados[0].severidade == "alto"
 
 
 def test_nao_colide_segredos_com_mesmo_trecho_ofuscado() -> None:
@@ -169,6 +172,7 @@ def test_formata_json_sem_expor_segredo() -> None:
         arquivo="config.py",
         linha=3,
         trecho_ofuscado=ofuscar(segredo),
+        severidade="critico",
     )
 
     relatorio = formatar_json([achado], 12, Path("/tmp/repositorio"))
@@ -181,5 +185,6 @@ def test_formata_json_sem_expor_segredo() -> None:
         "total_ocorrencias": 1,
     }
     assert documento["achados"][0]["arquivo"] == "config.py"
+    assert documento["achados"][0]["severidade"] == "critico"
     assert documento["achados"][0]["trecho_ofuscado"] == "AKIA…0000"
     assert segredo not in relatorio

@@ -35,12 +35,14 @@ leak-hunt --format json /caminho/do/repo > relatorio.json
 leak-hunt --exclude 'tests/**' --exclude '**/fixtures/**' /caminho/do/repo
 leak-hunt --only pix-email --skip cpf-hardcoded /caminho/do/repo
 leak-hunt --refs head /caminho/do/repo
+leak-hunt --fail-on critico,alto /caminho/do/repo
 ```
 
 O relatório nunca mostra o valor completo encontrado. O formato JSON usa a
 versão de schema `1` e pode ser consumido por ferramentas de CI.
 Ocorrências repetidas do mesmo segredo são agrupadas com a primeira aparição,
 a mais recente, a quantidade de ocorrências e os arquivos afetados.
+Cada achado inclui severidade `critico`, `alto`, `medio` ou `baixo`.
 
 Exclusões também podem ser declaradas, uma por linha, em `.leakhuntignore` na
 raiz analisada. Os padrões são globs, são aplicados em ordem e aceitam `!` para
@@ -75,17 +77,20 @@ locais.
 
 ## Códigos de saída
 
-- `0`: varredura concluída sem achados.
-- `1`: um ou mais possíveis segredos encontrados.
+- `0`: varredura concluída sem achados bloqueantes.
+- `1`: um ou mais possíveis segredos encontrados. Com `--fail-on`, somente
+  achados nas severidades selecionadas causam esse código.
 - `2`: caminho, argumento ou execução do Git inválidos.
 
 ## Regras do MVP
 
-- AWS Access Key, cabeçalhos de chave privada, JWT e tokens de acesso GitHub.
-- Chaves PIX por e-mail, EVP, CPF e CNPJ em contexto PIX.
-- CPF e CNPJ hardcoded, com dígitos válidos e no mínimo cinco ocorrências no
-  mesmo arquivo.
-- Valores não vazios versionados em `.env` e variantes como `.env.production`;
+- AWS Access Key, cabeçalhos de chave privada e tokens de acesso GitHub são
+  críticos; JWT é alto.
+- Chaves PIX por e-mail, EVP, CPF e CNPJ em contexto PIX são médias.
+- CPF e CNPJ hardcoded são médios, com dígitos válidos e no mínimo cinco
+  ocorrências no mesmo arquivo.
+- Valores não vazios versionados em `.env` têm severidade alta e incluem
+  variantes como `.env.production`;
   arquivos de modelo (`.example`, `.sample`, `.template`, `.dist`) são ignorados.
 
 ## Licença

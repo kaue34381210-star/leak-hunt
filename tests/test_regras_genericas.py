@@ -4,18 +4,30 @@ from leak_hunt.regras import ErroSelecaoRegras, detectar, selecionar_regras
 
 
 @pytest.mark.parametrize(
-    ("texto", "codigo"),
+    ("texto", "codigo", "severidade"),
     [
-        ("chave = " + "AKIA" + "FAKE" + "0" * 12, "aws-access-key"),
-        ("-----BEGIN OPENSSH PRIVATE KEY-----", "private-key"),
+        (
+            "chave = " + "AKIA" + "FAKE" + "0" * 12,
+            "aws-access-key",
+            "critico",
+        ),
+        ("-----BEGIN OPENSSH PRIVATE KEY-----", "private-key", "critico"),
         (
             "token = " + "eyJ" + "a" * 12 + ".eyJ" + "b" * 12 + "." + "c" * 12,
             "jwt",
+            "alto",
         ),
     ],
 )
-def test_detecta_segredos_genericos(texto: str, codigo: str) -> None:
-    assert [achado.codigo for achado in detectar(texto)] == [codigo]
+def test_detecta_segredos_genericos(
+    texto: str,
+    codigo: str,
+    severidade: str,
+) -> None:
+    deteccoes = list(detectar(texto))
+
+    assert [achado.codigo for achado in deteccoes] == [codigo]
+    assert [achado.severidade for achado in deteccoes] == [severidade]
 
 
 @pytest.mark.parametrize(
@@ -64,6 +76,7 @@ def test_detecta_tokens_de_acesso_github(prefixo: str) -> None:
     assert [item.codigo for item in detectar(f'token = "{token}"')] == [
         "github-pat"
     ]
+    assert next(detectar(token)).severidade == "critico"
 
 
 def test_ignora_token_github_curto() -> None:

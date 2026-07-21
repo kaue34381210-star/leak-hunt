@@ -7,6 +7,12 @@ def _codigos(texto: str) -> list[str]:
     return [deteccao.codigo for deteccao in detectar(texto)]
 
 
+def test_regras_brasileiras_tem_severidade_media() -> None:
+    deteccao = next(detectar('pix = "financeiro@example.com"'))
+
+    assert deteccao.severidade == "medio"
+
+
 @pytest.mark.parametrize(
     ("texto", "codigo"),
     [

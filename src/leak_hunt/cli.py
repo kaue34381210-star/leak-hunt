@@ -5,9 +5,16 @@ from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
 import sys
+from typing import cast
 
 from leak_hunt.exclusoes import carregar_exclusoes
-from leak_hunt.regras import ErroSelecaoRegras, detectar, selecionar_regras
+from leak_hunt.regras import (
+    ErroSelecaoRegras,
+    SEVERIDADES,
+    Severidade,
+    detectar,
+    selecionar_regras,
+)
 from leak_hunt.relatorio import (
     AgregadorAchados,
     formatar_json,
@@ -29,6 +36,17 @@ def _data_iso(valor: str) -> date:
         raise argparse.ArgumentTypeError(
             "a data deve estar no formato AAAA-MM-DD"
         ) from erro
+
+
+def _lista_severidades(valor: str) -> frozenset[Severidade]:
+    niveis = {item.strip().lower() for item in valor.split(",") if item.strip()}
+    desconhecidos = niveis - set(SEVERIDADES)
+    if not niveis or desconhecidos:
+        validos = ", ".join(SEVERIDADES)
+        raise argparse.ArgumentTypeError(
+            f"severidade inválida; use uma ou mais entre: {validos}"
+        )
+    return frozenset(cast(Severidade, nivel) for nivel in niveis)
 
 
 def criar_parser() -> argparse.ArgumentParser:
@@ -85,6 +103,16 @@ def criar_parser() -> argparse.ArgumentParser:
         default=[],
         metavar="CODE",
         help="desativa a regra CODE; pode ser repetido",
+    )
+    parser.add_argument(
+        "--fail-on",
+        dest="falhar_em",
+        metavar="NIVEL[,NIVEL]",
+        type=_lista_severidades,
+        help=(
+            "retorna 1 somente para achados nos níveis selecionados "
+            "(critico, alto, medio, baixo)"
+        ),
     )
     parser.add_argument(
         "caminho",
@@ -146,4 +174,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         relatorio = formatar_texto(achados, total_linhas)
     print(relatorio)
-    return 1 if achados else 0
+    if argumentos.falhar_em is None:
+        return 1 if achados else 0
+    return int(
+        any(achado.severidade in argumentos.falhar_em for achado in achados)
+    )

@@ -3,10 +3,13 @@
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 import re
+from typing import Literal
 
 
 Validador = Callable[[re.Match[str], str], bool]
 ValidadorArquivo = Callable[[str], bool]
+Severidade = Literal["critico", "alto", "medio", "baixo"]
+SEVERIDADES: tuple[Severidade, ...] = ("critico", "alto", "medio", "baixo")
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,6 +22,7 @@ class Deteccao:
     inicio: int
     fim: int
     minimo_por_arquivo: int = 1
+    severidade: Severidade = "alto"
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +37,7 @@ class Regra:
     grupo_valor: int | str = 0
     minimo_por_arquivo: int = 1
     valores_permitidos: frozenset[str] = frozenset()
+    severidade: Severidade = "alto"
 
     def procurar(
         self,
@@ -57,4 +62,5 @@ class Regra:
                 inicio=correspondencia.start(self.grupo_valor),
                 fim=correspondencia.end(self.grupo_valor),
                 minimo_por_arquivo=self.minimo_por_arquivo,
+                severidade=self.severidade,
             )

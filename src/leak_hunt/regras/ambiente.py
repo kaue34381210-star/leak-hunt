@@ -34,5 +34,6 @@ REGRAS_AMBIENTE = (
         validador=_valor_env_nao_vazio,
         validador_arquivo=_arquivo_env_real,
         grupo_valor="valor",
+        severidade="alto",
     ),
 )

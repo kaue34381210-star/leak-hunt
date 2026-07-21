@@ -24,6 +24,7 @@ REGRAS_GENERICAS = (
         tipo="AWS Access Key",
         padrao=re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
         valores_permitidos=_EXEMPLOS_AWS,
+        severidade="critico",
     ),
     Regra(
         codigo="private-key",
@@ -31,6 +32,7 @@ REGRAS_GENERICAS = (
         padrao=re.compile(
             r"-----BEGIN (?:RSA|OPENSSH|EC|DSA|PGP) PRIVATE KEY-----"
         ),
+        severidade="critico",
     ),
     Regra(
         codigo="jwt",
@@ -41,6 +43,7 @@ REGRAS_GENERICAS = (
             r"[A-Za-z0-9_-]{10,}(?![A-Za-z0-9_-])"
         ),
         valores_permitidos=frozenset({_EXEMPLO_JWT_IO}),
+        severidade="alto",
     ),
     Regra(
         codigo="github-pat",
@@ -49,5 +52,6 @@ REGRAS_GENERICAS = (
             r"(?<![A-Za-z0-9_])gh[pousr]_[A-Za-z0-9]{36}"
             r"(?![A-Za-z0-9_])"
         ),
+        severidade="critico",
     ),
 )

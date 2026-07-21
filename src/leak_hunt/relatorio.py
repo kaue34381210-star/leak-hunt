@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from leak_hunt.regras import Deteccao
+from leak_hunt.regras import Deteccao, Severidade
 from leak_hunt.varredura import LinhaAdicionada
 
 
@@ -28,12 +28,14 @@ class Achado:
     arquivos_afetados: tuple[str, ...] = ()
     primeiro_commit: str = ""
     commit_mais_recente: str = ""
+    severidade: Severidade = "alto"
 
 
 @dataclass(slots=True)
 class _GrupoAchados:
     codigo: str
     tipo: str
+    severidade: Severidade
     trecho_ofuscado: str
     minimo_por_arquivo: int
     ocorrencias: int
@@ -59,6 +61,7 @@ class AgregadorAchados:
             self._grupos[chave] = _GrupoAchados(
                 codigo=deteccao.codigo,
                 tipo=deteccao.tipo,
+                severidade=deteccao.severidade,
                 trecho_ofuscado=ofuscar(deteccao.valor),
                 minimo_por_arquivo=deteccao.minimo_por_arquivo,
                 ocorrencias=1,
@@ -86,6 +89,7 @@ class AgregadorAchados:
                 Achado(
                     codigo=grupo.codigo,
                     tipo=grupo.tipo,
+                    severidade=grupo.severidade,
                     commit=recente.commit,
                     autor=recente.autor,
                     data=recente.data,
@@ -132,6 +136,7 @@ def criar_achado(linha: LinhaAdicionada, deteccao: Deteccao) -> Achado:
         arquivos_afetados=(linha.arquivo,),
         primeiro_commit=linha.commit,
         commit_mais_recente=linha.commit,
+        severidade=deteccao.severidade,
     )
 
 
@@ -164,6 +169,7 @@ def formatar_texto(achados: list[Achado], total_linhas: int) -> str:
             [
                 "",
                 f"[{indice}] {achado.tipo} ({achado.codigo})",
+                f"    Severidade: {achado.severidade}",
                 f"    Commit: {achado.commit}",
                 f"    Autor: {achado.autor}",
                 f"    Data: {achado.data}",
@@ -196,6 +202,7 @@ def formatar_json(
             {
                 "codigo": achado.codigo,
                 "tipo": achado.tipo,
+                "severidade": achado.severidade,
                 "commit": achado.commit,
                 "autor": achado.autor,
                 "data": achado.data,
