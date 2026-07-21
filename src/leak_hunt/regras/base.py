@@ -32,6 +32,7 @@ class Regra:
     validador_arquivo: ValidadorArquivo | None = None
     grupo_valor: int | str = 0
     minimo_por_arquivo: int = 1
+    valores_permitidos: frozenset[str] = frozenset()
 
     def procurar(
         self,
@@ -47,6 +48,8 @@ class Regra:
             if self.validador and not self.validador(correspondencia, texto):
                 continue
             valor = correspondencia.group(self.grupo_valor)
+            if valor in self.valores_permitidos:
+                continue
             yield Deteccao(
                 codigo=self.codigo,
                 tipo=self.tipo,

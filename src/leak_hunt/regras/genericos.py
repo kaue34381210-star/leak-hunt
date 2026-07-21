@@ -5,11 +5,25 @@ import re
 from leak_hunt.regras.base import Regra
 
 
+_EXEMPLOS_AWS = frozenset(
+    {
+        "AKIAIOSFODNN7EXAMPLE",
+        "AKIAI44QH8DHBEXAMPLE",
+    }
+)
+_EXEMPLO_JWT_IO = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ."
+    "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+)
+
+
 REGRAS_GENERICAS = (
     Regra(
         codigo="aws-access-key",
         tipo="AWS Access Key",
         padrao=re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+        valores_permitidos=_EXEMPLOS_AWS,
     ),
     Regra(
         codigo="private-key",
@@ -26,6 +40,7 @@ REGRAS_GENERICAS = (
             r"eyJ[A-Za-z0-9_-]{10,}\."
             r"[A-Za-z0-9_-]{10,}(?![A-Za-z0-9_-])"
         ),
+        valores_permitidos=frozenset({_EXEMPLO_JWT_IO}),
     ),
     Regra(
         codigo="github-pat",

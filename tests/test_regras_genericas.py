@@ -68,3 +68,25 @@ def test_detecta_tokens_de_acesso_github(prefixo: str) -> None:
 
 def test_ignora_token_github_curto() -> None:
     assert list(detectar("token = " + "ghp_" + "A" * 12)) == []
+
+
+@pytest.mark.parametrize(
+    "valor",
+    [
+        "AKIAIOSFODNN7EXAMPLE",
+        "AKIAI44QH8DHBEXAMPLE",
+        (
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+            "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ."
+            "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        ),
+    ],
+)
+def test_ignora_exemplos_publicos_exatos(valor: str) -> None:
+    assert list(detectar(f'credencial = "{valor}"')) == []
+
+
+def test_nao_permite_automaticamente_valor_parecido_com_exemplo() -> None:
+    valor = "AKIAIOSFODNN7EXAMPLF"
+
+    assert [item.codigo for item in detectar(valor)] == ["aws-access-key"]

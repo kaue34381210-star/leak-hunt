@@ -70,6 +70,8 @@ locais.
   certificados `.pfx` e `.p12`, exigirão uma futura análise de blobs.
 - Nenhuma regra consulta serviços externos para confirmar credenciais. A
   execução permanece integralmente local.
+- Exemplos públicos conhecidos são ignorados somente quando o valor completo
+  coincide exatamente com a allowlist embutida da respectiva regra.
 
 ## Códigos de saída
 
