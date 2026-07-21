@@ -23,6 +23,7 @@ def test_exibe_ajuda_sem_argumentos(capsys: pytest.CaptureFixture[str]) -> None:
     assert "--since" in saida
     assert "--format" in saida
     assert "--refs" in saida
+    assert "--staged" in saida
     assert "--exclude" in saida
     assert "--only" in saida
     assert "--skip" in saida
@@ -56,6 +57,24 @@ def test_rejeita_severidade_desconhecida(
 
     assert erro.value.code == 2
     assert "severidade inválida" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "argumentos",
+    [
+        ["--staged", "--since", "2026-01-01", "."],
+        ["--staged", "--refs", "head", "."],
+    ],
+)
+def test_rejeita_filtros_de_historico_com_staged(
+    argumentos: list[str],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as erro:
+        main(argumentos)
+
+    assert erro.value.code == 2
+    assert "--staged não pode ser combinado" in capsys.readouterr().err
 
 
 def test_recebe_caminho_do_repositorio(
@@ -144,3 +163,28 @@ def test_retorna_um_e_ofusca_quando_encontra_segredo(
     assert main(["--fail-on", "alto,medio", str(tmp_path)]) == 0
     capsys.readouterr()
     assert main(["--fail-on", "critico,alto", str(tmp_path)]) == 1
+
+
+def test_staged_detecta_index_sem_caminho_explicito(
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    segredo = "AKIA" + "STAGED" + "0" * 10
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    (tmp_path / "config.py").write_text(
+        f'CHAVE = "{segredo}"\n',
+        encoding="utf-8",
+    )
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", "config.py"],
+        check=True,
+    )
+    monkeypatch.chdir(tmp_path)
+
+    assert main(["--staged"]) == 1
+
+    saida = capsys.readouterr().out
+    assert "AWS Access Key" in saida
+    assert "Commit: INDEX" in saida
+    assert segredo not in saida

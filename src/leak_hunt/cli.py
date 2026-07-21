@@ -24,6 +24,7 @@ from leak_hunt.varredura import (
     ErroRepositorio,
     ErroVarredura,
     iterar_linhas_adicionadas,
+    iterar_linhas_staged,
     validar_repositorio,
 )
 from leak_hunt.versao import __version__
@@ -81,6 +82,11 @@ def criar_parser() -> argparse.ArgumentParser:
         help="referências Git analisadas (padrão: all)",
     )
     parser.add_argument(
+        "--staged",
+        action="store_true",
+        help="analisa somente as linhas adicionadas no index do Git",
+    )
+    parser.add_argument(
         "--exclude",
         dest="exclusoes",
         action="append",
@@ -128,7 +134,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Executa a interface de linha de comando."""
     parser = criar_parser()
     argumentos = parser.parse_args(argv)
-    if argumentos.caminho is None:
+    if argumentos.staged and argumentos.desde is not None:
+        parser.error("--staged não pode ser combinado com --since")
+    if argumentos.staged and argumentos.refs != "all":
+        parser.error("--staged não pode ser combinado com --refs")
+
+    caminho = argumentos.caminho
+    if caminho is None and argumentos.staged:
+        caminho = Path(".")
+    if caminho is None:
         parser.print_help()
         return 0
 
@@ -142,7 +156,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     try:
-        repositorio = validar_repositorio(argumentos.caminho)
+        repositorio = validar_repositorio(caminho)
     except ErroRepositorio as erro:
         print(f"erro: {erro}", file=sys.stderr)
         return 2
@@ -151,12 +165,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         total_linhas = 0
         agregador = AgregadorAchados()
         exclusoes = carregar_exclusoes(repositorio, argumentos.exclusoes)
-        for linha in iterar_linhas_adicionadas(
-            repositorio,
-            desde=argumentos.desde,
-            exclusoes=exclusoes,
-            refs=argumentos.refs,
-        ):
+        if argumentos.staged:
+            linhas = iterar_linhas_staged(repositorio, exclusoes=exclusoes)
+        else:
+            linhas = iterar_linhas_adicionadas(
+                repositorio,
+                desde=argumentos.desde,
+                exclusoes=exclusoes,
+                refs=argumentos.refs,
+            )
+        for linha in linhas:
             total_linhas += 1
             for deteccao in detectar(
                 linha.conteudo,

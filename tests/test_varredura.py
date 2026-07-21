@@ -8,6 +8,7 @@ from leak_hunt.varredura import (
     ErroRepositorio,
     _caminho_do_diff,
     iterar_linhas_adicionadas,
+    iterar_linhas_staged,
     validar_repositorio,
 )
 
@@ -85,6 +86,23 @@ def test_preserva_sinais_de_mais_do_conteudo(tmp_path) -> None:
     linhas = list(iterar_linhas_adicionadas(tmp_path))
 
     assert [linha.conteudo for linha in linhas] == ["++ valor"]
+
+
+def test_percorre_index_sem_incluir_alteracoes_nao_staged(tmp_path) -> None:
+    _preparar_repositorio(tmp_path)
+    arquivo = tmp_path / "config.py"
+    arquivo.write_text("linha staged\n", encoding="utf-8")
+    _git(tmp_path, "add", "config.py")
+    arquivo.write_text("linha staged\nlinha unstaged\n", encoding="utf-8")
+
+    linhas = list(iterar_linhas_staged(tmp_path))
+
+    assert [linha.conteudo for linha in linhas] == ["linha staged"]
+    assert linhas[0].arquivo == "config.py"
+    assert linhas[0].numero == 1
+    assert linhas[0].commit == "INDEX"
+    assert linhas[0].autor == "(ainda não commitado)"
+    assert "T" in linhas[0].data
 
 
 def test_filtra_historico_por_data(tmp_path) -> None:

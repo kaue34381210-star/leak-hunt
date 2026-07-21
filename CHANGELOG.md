@@ -15,4 +15,5 @@ Primeiro MVP funcional.
 - Deduplicação com contagem de ocorrências e arquivos afetados.
 - Allowlist exata para exemplos públicos conhecidos da AWS e do jwt.io.
 - Severidade por regra e política de saída configurável com `--fail-on`.
+- Varredura preventiva do index com `--staged` e hook para pre-commit.
 - Suporte a Python 3.10–3.13 com cobertura mínima automatizada de 85%.

@@ -36,6 +36,7 @@ leak-hunt --exclude 'tests/**' --exclude '**/fixtures/**' /caminho/do/repo
 leak-hunt --only pix-email --skip cpf-hardcoded /caminho/do/repo
 leak-hunt --refs head /caminho/do/repo
 leak-hunt --fail-on critico,alto /caminho/do/repo
+leak-hunt --staged /caminho/do/repo
 ```
 
 O relatório nunca mostra o valor completo encontrado. O formato JSON usa a
@@ -54,6 +55,11 @@ regras específicas. Quando usados juntos, `--skip` prevalece.
 Por padrão, `--refs all` cobre todas as referências. Use `--refs head` para
 somente o histórico alcançável pelo `HEAD` ou `--refs branches` para branches
 locais.
+
+`--staged` analisa somente as linhas adicionadas ao index, antes do commit. O
+caminho pode ser omitido nesse modo, usando o diretório atual. O repositório
+também fornece o hook `leak-hunt` em `.pre-commit-hooks.yaml`, com
+`pass_filenames: false`, para integração com o framework pre-commit.
 
 ## Escopo e limitações
 

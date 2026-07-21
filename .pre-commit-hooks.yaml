@@ -1,0 +1,8 @@
+- id: leak-hunt
+  name: leak-hunt staged secret scan
+  description: Detecta possíveis segredos nas linhas adicionadas ao index do Git.
+  entry: leak-hunt --staged
+  language: python
+  pass_filenames: false
+  always_run: true
+  stages: [pre-commit]
