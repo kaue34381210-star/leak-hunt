@@ -102,8 +102,11 @@ aplicadas.
   precisão.
 - A regra de chave privada considera o cabeçalho isolado um indício suficiente;
   ela não exige nem valida o corpo criptográfico.
-- A análise atual cobre linhas adicionadas em patches. Arquivos binários, como
-  certificados `.pfx` e `.p12`, exigirão uma futura análise de blobs.
+- Além das linhas adicionadas em patches, a análise inspeciona blobs de até
+  10 MiB com extensões `.pfx`, `.p12`, `.jks`, `.keystore` e `.key`.
+  PKCS#12 e chaves DER exigem um envelope com comprimento estruturalmente
+  válido; JKS exige seu magic completo. Chaves PEM continuam cobertas pela
+  regra textual de cabeçalho, sem gerar um segundo achado por blob.
 - Nenhuma regra consulta serviços externos para confirmar credenciais. A
   execução permanece integralmente local.
 - Exemplos públicos conhecidos são ignorados somente quando o valor completo
@@ -126,6 +129,8 @@ aplicadas.
 - Valores não vazios versionados em `.env` têm severidade alta e incluem
   variantes como `.env.production`;
   arquivos de modelo (`.example`, `.sample`, `.template`, `.dist`) são ignorados.
+- Contêineres PKCS#12, Java KeyStores e arquivos de chave privada detectados por
+  blob têm severidade crítica.
 
 ## Licença
 

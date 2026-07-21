@@ -241,3 +241,37 @@ def test_atualiza_baseline_e_suprime_achado_existente(
 
     assert main([str(tmp_path)]) == 0
     assert "Nenhum segredo encontrado" in capsys.readouterr().out
+
+
+def test_detecta_pkcs12_versionado(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.name", "Teste"],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(tmp_path),
+            "config",
+            "user.email",
+            "teste@example.invalid",
+        ],
+        check=True,
+    )
+    (tmp_path / "empresa.p12").write_bytes(b"\x30\x81\x80" + b"x" * 128)
+    subprocess.run(["git", "-C", str(tmp_path), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-q", "-m", "certificado"],
+        check=True,
+    )
+
+    assert main([str(tmp_path)]) == 1
+
+    saida = capsys.readouterr().out
+    assert "Contêiner PKCS#12 versionado" in saida
+    assert "pkcs12-file" in saida

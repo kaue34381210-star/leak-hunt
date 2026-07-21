@@ -12,6 +12,7 @@ from leak_hunt.exclusoes import carregar_exclusoes
 from leak_hunt.regras import (
     ErroSelecaoRegras,
     SEVERIDADES,
+    Deteccao,
     Severidade,
     detectar,
     selecionar_regras,
@@ -25,6 +26,9 @@ from leak_hunt.relatorio import (
 from leak_hunt.varredura import (
     ErroRepositorio,
     ErroVarredura,
+    LinhaAdicionada,
+    iterar_blobs_sensiveis,
+    iterar_blobs_staged,
     iterar_linhas_adicionadas,
     iterar_linhas_staged,
     validar_repositorio,
@@ -188,6 +192,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         agregador = AgregadorAchados(fingerprints_ignorados)
         exclusoes = carregar_exclusoes(repositorio, argumentos.exclusoes)
+        regras_por_codigo = {regra.codigo: regra for regra in regras}
         if argumentos.staged:
             linhas = iterar_linhas_staged(repositorio, exclusoes=exclusoes)
         else:
@@ -205,6 +210,39 @@ def main(argv: Sequence[str] | None = None) -> int:
                 arquivo=linha.arquivo,
             ):
                 agregador.adicionar(linha, deteccao)
+
+        if argumentos.staged:
+            blobs = iterar_blobs_staged(repositorio, exclusoes=exclusoes)
+        else:
+            blobs = iterar_blobs_sensiveis(
+                repositorio,
+                desde=argumentos.desde,
+                exclusoes=exclusoes,
+                refs=argumentos.refs,
+            )
+        for blob in blobs:
+            regra = regras_por_codigo.get(blob.codigo)
+            if regra is None:
+                continue
+            linha_blob = LinhaAdicionada(
+                commit=blob.commit,
+                autor=blob.autor,
+                data=blob.data,
+                arquivo=blob.arquivo,
+                numero=1,
+                conteudo="",
+            )
+            agregador.adicionar(
+                linha_blob,
+                Deteccao(
+                    codigo=regra.codigo,
+                    tipo=regra.tipo,
+                    valor=blob.oid,
+                    inicio=0,
+                    fim=len(blob.oid),
+                    severidade=regra.severidade,
+                ),
+            )
     except (ErroBaseline, ErroVarredura) as erro:
         print(f"erro: {erro}", file=sys.stderr)
         return 2

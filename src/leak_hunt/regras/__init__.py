@@ -3,12 +3,15 @@
 from collections.abc import Iterable, Iterator
 
 from leak_hunt.regras.ambiente import REGRAS_AMBIENTE
+from leak_hunt.regras.arquivos import REGRAS_ARQUIVOS
 from leak_hunt.regras.base import Deteccao, Regra, SEVERIDADES, Severidade
 from leak_hunt.regras.brasil import REGRAS_BRASIL
 from leak_hunt.regras.genericos import REGRAS_GENERICAS
 
 
-REGRAS: tuple[Regra, ...] = REGRAS_GENERICAS + REGRAS_BRASIL + REGRAS_AMBIENTE
+REGRAS: tuple[Regra, ...] = (
+    REGRAS_GENERICAS + REGRAS_BRASIL + REGRAS_AMBIENTE + REGRAS_ARQUIVOS
+)
 
 
 class ErroSelecaoRegras(ValueError):

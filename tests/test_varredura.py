@@ -6,7 +6,10 @@ import pytest
 
 from leak_hunt.varredura import (
     ErroRepositorio,
+    _classificar_blob,
     _caminho_do_diff,
+    iterar_blobs_sensiveis,
+    iterar_blobs_staged,
     iterar_linhas_adicionadas,
     iterar_linhas_staged,
     validar_repositorio,
@@ -103,6 +106,52 @@ def test_percorre_index_sem_incluir_alteracoes_nao_staged(tmp_path) -> None:
     assert linhas[0].commit == "INDEX"
     assert linhas[0].autor == "(ainda não commitado)"
     assert "T" in linhas[0].data
+
+
+def test_classifica_somente_formatos_binarios_compativeis() -> None:
+    der = b"\x30\x81\x80" + b"x" * 128
+
+    assert _classificar_blob("certificado.pfx", der) == (
+        "pkcs12-file",
+        "Contêiner PKCS#12 versionado",
+    )
+    assert _classificar_blob("chaves.jks", b"\xfe\xed\xfe\xedresto") == (
+        "jks-keystore",
+        "Java KeyStore versionado",
+    )
+    assert _classificar_blob(
+        "publico.pem",
+        b"-----BEGIN CERTIFICATE-----\nconteudo",
+    ) is None
+    assert _classificar_blob("ruido.pfx", b"\x30\x82incompleto") is None
+
+
+def test_percorre_blobs_sensiveis_no_historico(tmp_path) -> None:
+    _preparar_repositorio(tmp_path)
+    der = b"\x30\x81\x80" + b"x" * 128
+    (tmp_path / "certificado.pfx").write_bytes(der)
+    (tmp_path / "ruido.pfx").write_bytes("não é DER".encode("utf-8"))
+    _commit(tmp_path, "adiciona certificado")
+
+    blobs = list(iterar_blobs_sensiveis(tmp_path))
+
+    assert [(blob.codigo, blob.arquivo) for blob in blobs] == [
+        ("pkcs12-file", "certificado.pfx")
+    ]
+    assert len(blobs[0].oid) >= 40
+    assert len(blobs[0].commit) == 40
+
+
+def test_percorre_keystore_no_index(tmp_path) -> None:
+    _preparar_repositorio(tmp_path)
+    (tmp_path / "app.jks").write_bytes(b"\xfe\xed\xfe\xedconteudo")
+    _git(tmp_path, "add", "app.jks")
+
+    blobs = list(iterar_blobs_staged(tmp_path))
+
+    assert [(blob.codigo, blob.arquivo, blob.commit) for blob in blobs] == [
+        ("jks-keystore", "app.jks", "INDEX")
+    ]
 
 
 def test_filtra_historico_por_data(tmp_path) -> None:
