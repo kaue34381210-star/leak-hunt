@@ -17,4 +17,5 @@ Primeiro MVP funcional.
 - Severidade por regra e política de saída configurável com `--fail-on`.
 - Varredura preventiva do index com `--staged` e hook para pre-commit.
 - Baseline versionada para suprimir achados conhecidos sem persistir valores.
+- Teste ponta a ponta da CLI contra um histórico Git temporário real.
 - Suporte a Python 3.10–3.13 com cobertura mínima automatizada de 85%.
