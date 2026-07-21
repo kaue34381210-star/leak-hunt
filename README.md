@@ -123,6 +123,10 @@ aplicadas.
 
 - AWS Access Key, cabeçalhos de chave privada e tokens de acesso GitHub são
   críticos; JWT é alto.
+- Tokens Slack, chaves Stripe live, OpenAI, Anthropic e SendGrid são críticos;
+  Google API Key é alta. A regra OpenAI exige contexto `openai` ou as variáveis
+  `OPENAI_API_KEY`/`OPENAI_ADMIN_KEY` na mesma linha para reduzir falsos
+  positivos.
 - Chaves PIX por e-mail, EVP, CPF e CNPJ em contexto PIX são médias.
 - CPF e CNPJ hardcoded são médios, com dígitos válidos e no mínimo cinco
   ocorrências no mesmo arquivo.

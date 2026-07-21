@@ -21,4 +21,6 @@ Primeiro MVP funcional.
 - Release por tag para o PyPI via Trusted Publishing, sem token persistente.
 - Relatório SARIF 2.1.0 compatível com GitHub Code Scanning.
 - Detecção por conteúdo de PKCS#12, JKS e arquivos de chave privada em blobs.
+- Regras de alto sinal para Google, Slack, Stripe, OpenAI, Anthropic e SendGrid,
+  além de tokens GitHub fine-grained e installation no formato atual.
 - Suporte a Python 3.10–3.13 com cobertura mínima automatizada de 85%.
