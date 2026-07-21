@@ -9,6 +9,7 @@ from leak_hunt.relatorio import (
     criar_achado,
     filtrar_por_limiar,
     formatar_json,
+    formatar_sarif,
     formatar_texto,
     ofuscar,
 )
@@ -214,4 +215,38 @@ def test_formata_json_sem_expor_segredo() -> None:
     assert documento["achados"][0]["arquivo"] == "config.py"
     assert documento["achados"][0]["severidade"] == "critico"
     assert documento["achados"][0]["trecho_ofuscado"] == "AKIA…0000"
+    assert segredo not in relatorio
+
+
+def test_formata_sarif_compativel_sem_expor_segredo() -> None:
+    segredo = "AKIA" + "SARIF" + "0" * 11
+    achado = Achado(
+        codigo="aws-access-key",
+        tipo="AWS Access Key",
+        commit="a" * 40,
+        autor="Teste",
+        data="2026-07-20T10:00:00-03:00",
+        arquivo="pasta com espaço/config.py",
+        linha=3,
+        trecho_ofuscado=ofuscar(segredo),
+        severidade="critico",
+    )
+
+    relatorio = formatar_sarif([achado])
+    documento = json.loads(relatorio)
+
+    assert documento["version"] == "2.1.0"
+    execucao = documento["runs"][0]
+    assert execucao["tool"]["driver"]["name"] == "leak-hunt"
+    assert execucao["tool"]["driver"]["rules"][0]["id"] == "aws-access-key"
+    resultado = execucao["results"][0]
+    assert resultado["level"] == "error"
+    assert resultado["locations"][0]["physicalLocation"] == {
+        "artifactLocation": {
+            "uri": "pasta%20com%20espa%C3%A7o/config.py",
+            "uriBaseId": "%SRCROOT%",
+        },
+        "region": {"startLine": 3},
+    }
+    assert resultado["properties"]["trechoOfuscado"] == "AKIA…0000"
     assert segredo not in relatorio

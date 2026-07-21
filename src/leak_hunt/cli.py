@@ -19,6 +19,7 @@ from leak_hunt.regras import (
 from leak_hunt.relatorio import (
     AgregadorAchados,
     formatar_json,
+    formatar_sarif,
     formatar_texto,
 )
 from leak_hunt.varredura import (
@@ -72,7 +73,7 @@ def criar_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--format",
         dest="formato",
-        choices=("text", "json"),
+        choices=("text", "json", "sarif"),
         default="text",
         help="formato do relatório (padrão: text)",
     )
@@ -226,6 +227,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     if argumentos.formato == "json":
         relatorio = formatar_json(achados, total_linhas, repositorio)
+    elif argumentos.formato == "sarif":
+        relatorio = formatar_sarif(achados)
     else:
         relatorio = formatar_texto(achados, total_linhas)
     print(relatorio)

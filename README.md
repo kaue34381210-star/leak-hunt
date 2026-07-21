@@ -39,6 +39,7 @@ python -m leak_hunt --version
 leak-hunt /caminho/do/repo
 leak-hunt --since 2024-01-01 /caminho/do/repo
 leak-hunt --format json /caminho/do/repo > relatorio.json
+leak-hunt --format sarif /caminho/do/repo > relatorio.sarif
 leak-hunt --exclude 'tests/**' --exclude '**/fixtures/**' /caminho/do/repo
 leak-hunt --only pix-email --skip cpf-hardcoded /caminho/do/repo
 leak-hunt --refs head /caminho/do/repo
@@ -52,6 +53,9 @@ versão de schema `1` e pode ser consumido por ferramentas de CI.
 Ocorrências repetidas do mesmo segredo são agrupadas com a primeira aparição,
 a mais recente, a quantidade de ocorrências e os arquivos afetados.
 Cada achado inclui severidade `critico`, `alto`, `medio` ou `baixo`.
+O formato SARIF `2.1.0` pode ser enviado ao GitHub Code Scanning; nele,
+severidades crítica/alta viram `error`, média vira `warning` e baixa vira
+`note`.
 
 Exclusões também podem ser declaradas, uma por linha, em `.leakhuntignore` na
 raiz analisada. Os padrões são globs, são aplicados em ordem e aceitam `!` para

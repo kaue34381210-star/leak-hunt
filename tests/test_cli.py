@@ -118,6 +118,20 @@ def test_emite_json_valido_para_repositorio_sem_achados(
     assert documento["achados"] == []
 
 
+def test_emite_sarif_valido_para_repositorio_sem_achados(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+
+    assert main(["--format", "sarif", str(tmp_path)]) == 0
+
+    documento = json.loads(capsys.readouterr().out)
+    assert documento["version"] == "2.1.0"
+    assert documento["runs"][0]["tool"]["driver"]["name"] == "leak-hunt"
+    assert documento["runs"][0]["results"] == []
+
+
 def test_retorna_um_e_ofusca_quando_encontra_segredo(
     tmp_path,
     capsys: pytest.CaptureFixture[str],

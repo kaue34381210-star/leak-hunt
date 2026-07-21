@@ -6,10 +6,26 @@ from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
+from urllib.parse import quote
 
 from leak_hunt.baseline import criar_fingerprint
 from leak_hunt.regras import Deteccao, Severidade
 from leak_hunt.varredura import LinhaAdicionada
+from leak_hunt.versao import __version__
+
+
+_NIVEL_SARIF: dict[Severidade, str] = {
+    "critico": "error",
+    "alto": "error",
+    "medio": "warning",
+    "baixo": "note",
+}
+_PONTUACAO_SEGURANCA: dict[Severidade, str] = {
+    "critico": "9.5",
+    "alto": "8.0",
+    "medio": "5.5",
+    "baixo": "3.0",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,6 +259,91 @@ def formatar_json(
                 ),
             }
             for achado in achados
+        ],
+    }
+    return json.dumps(documento, ensure_ascii=False, indent=2)
+
+
+def formatar_sarif(achados: list[Achado]) -> str:
+    """Formata os achados no subconjunto SARIF 2.1.0 aceito pelo GitHub."""
+    por_codigo = {achado.codigo: achado for achado in achados}
+    codigos = sorted(por_codigo)
+    indices = {codigo: indice for indice, codigo in enumerate(codigos)}
+    regras = [
+        {
+            "id": codigo,
+            "name": codigo,
+            "shortDescription": {"text": por_codigo[codigo].tipo},
+            "fullDescription": {
+                "text": (
+                    f"O leak-hunt encontrou um possível segredo do tipo "
+                    f"{por_codigo[codigo].tipo}."
+                )
+            },
+            "defaultConfiguration": {
+                "level": _NIVEL_SARIF[por_codigo[codigo].severidade]
+            },
+            "help": {
+                "text": "Remova o valor do histórico e revogue a credencial exposta."
+            },
+            "properties": {
+                "tags": ["security", "secret"],
+                "security-severity": _PONTUACAO_SEGURANCA[
+                    por_codigo[codigo].severidade
+                ],
+            },
+        }
+        for codigo in codigos
+    ]
+    resultados = [
+        {
+            "ruleId": achado.codigo,
+            "ruleIndex": indices[achado.codigo],
+            "level": _NIVEL_SARIF[achado.severidade],
+            "message": {
+                "text": f"Possível segredo detectado: {achado.tipo}."
+            },
+            "locations": [
+                {
+                    "physicalLocation": {
+                        "artifactLocation": {
+                            "uri": quote(achado.arquivo, safe="/"),
+                            "uriBaseId": "%SRCROOT%",
+                        },
+                        "region": {"startLine": max(achado.linha, 1)},
+                    }
+                }
+            ],
+            "properties": {
+                "severidade": achado.severidade,
+                "trechoOfuscado": achado.trecho_ofuscado,
+                "ocorrencias": achado.ocorrencias,
+                "arquivosAfetados": len(achado.arquivos_afetados) or 1,
+                "primeiroCommit": achado.primeiro_commit or achado.commit,
+                "commitMaisRecente": (
+                    achado.commit_mais_recente or achado.commit
+                ),
+            },
+        }
+        for achado in achados
+    ]
+    documento = {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "leak-hunt",
+                        "semanticVersion": __version__,
+                        "informationUri": (
+                            "https://github.com/kaue34381210-star/leak-hunt"
+                        ),
+                        "rules": regras,
+                    }
+                },
+                "results": resultados,
+            }
         ],
     }
     return json.dumps(documento, ensure_ascii=False, indent=2)

@@ -19,4 +19,5 @@ Primeiro MVP funcional.
 - Baseline versionada para suprimir achados conhecidos sem persistir valores.
 - Teste ponta a ponta da CLI contra um histórico Git temporário real.
 - Release por tag para o PyPI via Trusted Publishing, sem token persistente.
+- Relatório SARIF 2.1.0 compatível com GitHub Code Scanning.
 - Suporte a Python 3.10–3.13 com cobertura mínima automatizada de 85%.
